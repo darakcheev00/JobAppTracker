@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "version": "1.1.0",
+    "name": "Job App Tracker 2",
+    "description":"testing oauth2 auth",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApMCKCXG+l+40lIux3SoURUNGTHN7qrWoxfAqEeS/1AaqvhpH84qDAIKri3/p2niJQ7ZL2+41l3wWt2N1f0bC0oj/xF4B+derVO0BbDjROwBtGeJg/UT479PDiPs1nnofU9llHj1wH590iFUFoFVyNcW4R7Q4vEocevbzZPpdPcvTyyp4ea9vRX68qfiiZkGB4a5hsPGqCJxIA9/pF6nGe7q0Ly+FhixJKGQNL8X3PVwcJHkOHKipVtC7gme3//WIZgRpYQdZ2oUVSW9U2dNPWz9nYhyOe2ViuPM4EMCmK3eDbr0kHR/VyMUdco5J/tjJwxZm0QOTNCMgpeZffTrWAwIDAQAB",
+    "oauth2":{
+        "client_id": "304928374436-eo5acj4mb80hmc43t1sjkgm4eq8njvg4.apps.googleusercontent.com",
+        "scopes":[
+            "profile email",
+            "https://www.googleapis.com/auth/gmail.readonly"
+        ]
+    },
+    "action": {
+        "default_popup": "index.html"
+    },
+    "permissions":[
+        "scripting",
+        "identity", 
+        "identity.email",
+        "storage"
+    ],
+    "host_permissions":[ 
+        "http://*/*",
+        "https://*/*"
+    ]
+}

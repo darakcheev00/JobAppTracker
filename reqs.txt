@@ -1,0 +1,2 @@
+npm install googleapis
+npm install cors nodemailer gmail-api-parse-message
