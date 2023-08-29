@@ -25,16 +25,20 @@ export const getMessages = async (token: string|undefined, query: string) => {
         return message;
     });
 
-    return await Promise.all(messagePromises);
+    const raw_messages = await Promise.all(messagePromises);
+
+    // TODO: decode messages selectively if their sender is not in invalid list
+ 
+    // TODO: check message size
+     
+    // TODO: mask personal information: v1: replace numbers
+ 
+    // TODO: chat gpt api
+ 
+    // TODO: format output for easy display
+
+    return raw_messages;
 }
 
-// /**
-//  * Get specific message data for a given message id
-//  * @param  {string} messageId The message id to retrieve for
-//  * @return {object} the object message
-//  */
-// export const getMessage = async (token: string|undefined, {messageId}: { messageId: string } ) => {
-//     const response = await gmail.users.messages.get({id: messageId, userId: 'me'});
-//     const message = response.data;
-//     return message;
-// }
+
+
