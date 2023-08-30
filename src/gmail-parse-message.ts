@@ -31,17 +31,20 @@ function indexHeaders(headers: any) {
 function extractContent(s: string, space: boolean) {
 	var span = document.createElement('span');
 	span.innerHTML = s;
+
 	if (space) {
 		var children = span.querySelectorAll('*');
 		for (var i = 0; i < children.length; i++) {
-			if (children[i].textContent){
+			if (children[i].textContent 
+				&& children[i].textContent?.indexOf('@import') === -1
+				&& children[i].textContent?.indexOf('@media') === -1) {
 				children[i].textContent += ' ';
 			}else{
-				children[i].textContent = '\n';
+				children[i].textContent = '';
 			}
 		}
 	}
-	
+
 	return [span.textContent || span.innerText].toString().replace(/ +/g, ' ').replace(/^\s*[\r\n]/gm, '');
 };
 
@@ -129,10 +132,15 @@ export const parseMessage = (response: any) => {
 		result.body = urlB64Decode(payload.body.data);
 	}
 
-	const converted_html_to_plain = extractContent(result.textHtml, true);
-	console.log(result.id, converted_html_to_plain);
+	if (result.textPlain === ""){
+		const converted_html_to_plain = extractContent(result.textHtml, true);
+		result.full_text = converted_html_to_plain;
+		// console.log(result.id, converted_html_to_plain);
+	}else{
+		result.full_text = result.textPlain;
+	}
 
-	// result.full_text = result.textPlain + '\n' + converted_html_to_plain;
+	result.full_text.replace(/\d/g, '*').replace('\n', '');
 
 	return result;
 };
