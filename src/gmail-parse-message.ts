@@ -140,7 +140,7 @@ export const parseMessage = (response: any) => {
 		result.full_text = result.textPlain;
 	}
 
-	result.full_text.replace(/\d/g, '*').replace('\n', '');
+	result.full_text = result.full_text.replace(/\d/g, '*').replace('\n', '');
 
 	return result;
 };
