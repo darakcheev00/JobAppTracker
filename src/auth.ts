@@ -3,11 +3,14 @@ export async function isAuthenticated() {
     const authToken = data.authToken;
     console.log("Token retrieved: ",authToken);
     const authenticated = authToken !== undefined && authToken !== null;
+
+    // DEBUG
     console.log("isAuthenticated: ", authenticated);
-    return authenticated;
+    
+    return [authenticated, authToken];
 };
 
-export async function setAuthToken(token: {}) {
+export async function setAuthTokenAsync(token: {}) {
     await chrome.storage.local.set({authToken: token}, () => {
         console.log("Token stored: ", token);
     });
@@ -18,11 +21,13 @@ export async function authenticate() {
     console.log("Authenticating...");
     const authToken = await chrome.identity.getAuthToken({interactive: true});
     
-    setAuthToken(authToken);
+    await setAuthTokenAsync(authToken);
     console.log("Authenticated! Token: ",authToken);
 
-    const res = await isAuthenticated();
-    console.log("Logged in. Auth:",res);
+    // DEBUG
+    const [_,resToken] = await isAuthenticated();
+    console.log("Logged in. Auth:",resToken);
+
     return authToken.token;
 }
 
@@ -35,6 +40,8 @@ export async function getUserEmail(){
 export async function logout() {
     console.log("Logging out...");
     await chrome.storage.local.remove('authToken');
-    const res = await isAuthenticated();
-    console.log("User logged out. Auth:",res);
+
+    // DEBUG
+    const [_,authToken] = await isAuthenticated();
+    console.log("User logged out. Auth:",authToken);
 }

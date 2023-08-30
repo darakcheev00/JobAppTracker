@@ -1,84 +1,64 @@
-// import parseMessage from './gmail-parse-message';
-
-const invalid_senders = ['linkedin.com','@remotemore.com','@eg.vrbo.com','@send.grammarly.com','@mailtrack.io',
-'@weworkremotely.com','getpocket_com,','spotangels','silkandsnow.com','@github.com',
-'order.eventbrite.com','invitetoapply@indeed.com','@vailresortsmail.com','@bowldigest.com'];
+import { parseMessage } from './gmail-parse-message';
 
 /**
  * Get messages from gmail api
  * @return {array} the array of messages
  */
 export const getMessages = async (token: string | undefined, query: string) => {
-    console.log(query);
-    const data = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}`, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-
-    const info = await data.json();
-    const messagePromises = info.messages.map(async (msg: any) => {
-        const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
+    try {
+        console.log(query);
+        const data = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
-        const full_message = await res.json();
 
-        let reduced_message = {
-            sender: "",
-            subject: "",
-            date: "",
-            body: []
-        };
+        if (!data.ok) {
+            throw new Error(`HTTP error! Status: ${data.status}`);
+        }
+        const info = await data.json();
 
-        const headers = full_message.payload.headers;
-
-        for (const {name, value} of headers){
-            if (name === "From") {
-                reduced_message.sender = value;
-
-                // return invalid reduced_message if sender is invalid
-                for (const invalid of invalid_senders){
-                    if (value.indexOf(invalid) !== -1) {
-                        reduced_message.sender = "Error: Invalid Sender";
-                        return reduced_message;
-                    }
-                }
-
-            } else if (name === "Subject") {
-                reduced_message.subject = value;
-            } else if (name === "Date") {
-                reduced_message.date = value;
-            }
+        if (info.messages === undefined) {
+            console.error("Error: ", info);
+            return {};
         }
 
-        // TODO: reduce to lowercase and compare!!!!
-        
-        reduced_message.body = full_message.payload.parts;
+        const messagePromises = info.messages.map(async (msg: any) => {
+            const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            const full_message = await res.json();
+            const reduced_message = parseMessage(full_message);
+            
+            return reduced_message;
+        });
 
-        return full_message;
-    });
+        const reduced_messages = await Promise.all(messagePromises);
 
-    const reduced_messages = await Promise.all(messagePromises);
+        // Filter out invalid messages
+        const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender");        
 
-    const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender");
+        // TODO: check message token length
 
-    // TODO check why some dates are not set and why some bodies are undefined
+        // TODO: mask personal information: v1: replace numbers
 
-    // TODO: decode messages
+        // TODO: chat gpt api
 
-    // TODO: check message size
+        // TODO: format output for easy display
 
-    // TODO: mask personal information: v1: replace numbers
+        return valid_messages;
 
-    // TODO: chat gpt api
+    } catch (error) {
+        // Handle errors related to the main fetch request
+        console.error("Error fetching messages:", error);
+        return {};
+    }
 
-    // TODO: format output for easy display
-
-    return valid_messages;
+    
 }
 
 

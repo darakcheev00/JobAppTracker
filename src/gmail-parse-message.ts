@@ -1,118 +1,138 @@
-// var b64Decode = require('base-64').decode;
+import { decode } from './base64';
 
-// /**
-//  * Decodes a url safe Base64 string to its original representation.
-//  * @param  {string} string
-//  * @return {string}
-//  */
-// function urlB64Decode(str: string) {
-//   return str
-//    ? decodeURIComponent(escape(b64Decode(str.replace(/\-/g, '+').replace(/\_/g, '/'))))
-//    : '';
-// }
+/**
+ * Decodes a url safe Base64 string to its original representation.
+ * @param  {string} string
+ * @return {string}
+ */
+function urlB64Decode(str: string) {
+	return str
+		? decode(str.replace(/\-/g, '+').replace(/\_/g, '/'))
+		: '';
+}
 
-// /**
-//  * Takes the header array filled with objects and transforms it into a more
-//  * pleasant key-value object.
-//  * @param  {array} headers
-//  * @return {object}
-//  */
-// function indexHeaders(headers:any) {
-//   if (!headers) {
-//     return {};
-//   } else {
-//     return headers.reduce(function (result:any, header:any) {
-//       result[header.name.toLowerCase()] = header.value;
-//       return result;
-//     }, {});
-//   }
-// }
+/**
+ * Takes the header array filled with objects and transforms it into a more
+ * pleasant key-value object.
+ * @param  {array} headers
+ * @return {object}
+ */
+function indexHeaders(headers: any) {
+	if (!headers) {
+		return {};
+	} else {
+		return headers.reduce(function (result: any, header: any) {
+			result[header.name.toLowerCase()] = header.value;
+			return result;
+		}, {});
+	}
+}
 
-// /**
-//  * Takes a response from the Gmail API's GET message method and extracts all
-//  * the relevant data.
-//  * @param  {object} response
-//  * @return {object}
-//  */
-// export function parseMessage(response:any) {
-//   var result = {
-//     id: response.id,
-//     threadId: response.threadId,
-//     labelIds: response.labelIds,
-//     snippet: response.snippet,
-//     historyId: response.historyId,
-//     internalDate:0,
-//     headers:null,
-//     textHtml:"",
-//     textPlain:"",
-//     attachments:[],
-//     inline:[]
-//   };
-//   if (response.internalDate) {
-//     result.internalDate = parseInt(response.internalDate);
-//   }
+function extractContent(s: string, space: boolean) {
+	var span = document.createElement('span');
+	span.innerHTML = s;
+	if (space) {
+		var children = span.querySelectorAll('*');
+		for (var i = 0; i < children.length; i++) {
+			if (children[i].textContent){
+				children[i].textContent += ' ';
+			}else{
+				children[i].textContent = '\n';
+			}
+		}
+	}
+	
+	return [span.textContent || span.innerText].toString().replace(/ +/g, ' ').replace(/^\s*[\r\n]/gm, '');
+};
 
-//   var payload = response.payload;
-//   if (!payload) {
-//     return result;
-//   }
+const invalid_senders = ['linkedin.com', '@remotemore.com', '@eg.vrbo.com', '@send.grammarly.com', '@mailtrack.io',
+	'@weworkremotely.com', 'getpocket_com,', 'spotangels', 'silkandsnow.com', '@github.com',
+	'order.eventbrite.com', 'invitetoapply@indeed.com', '@vailresortsmail.com', '@bowldigest.com'];
 
-//   var headers = indexHeaders(payload.headers);
-//   result.headers = headers;
+/**
+ * Takes a response from the Gmail API's GET message method and extracts all
+ * the relevant data.
+ * @param  {object} response
+ * @return {object}
+ */
+export const parseMessage = (response: any) => {
+	var result = {
+		id: response.id,
+		snippet: response.snippet,
+		sender: "Error: Invalid Sender",
+		subject: "",
+		internalDate: 0,
+		textHtml: "",
+		textPlain: "",
+		body: "",
+		full_text: ""
+	};
 
-//   var parts = [payload];
-//   var firstPartProcessed = false;
+	// TODO: combine text into one string
 
-//   while (parts.length !== 0) {
-//     var part = parts.shift();
-//     if (part.parts) {
-//       parts = parts.concat(part.parts);
-//     }
-//     if (firstPartProcessed) {
-//       headers = indexHeaders(part.headers);
-//     }
+	if (response.internalDate) {
+		result.internalDate = parseInt(response.internalDate);
+	}
 
-//     if (!part.body) {
-//       continue;
-//     }
+	var payload = response.payload;
+	if (!payload) {
+		return result;
+	}
 
-//     var isHtml = part.mimeType && part.mimeType.indexOf('text/html') !== -1;
-//     var isPlain = part.mimeType && part.mimeType.indexOf('text/plain') !== -1;
-//     var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().indexOf('attachment') !== -1));
-//     var isInline = headers['content-disposition'] && headers['content-disposition'].toLowerCase().indexOf('inline') !== -1;
+	var headers = indexHeaders(payload.headers);
 
-//     if (isHtml && !isAttachment) {
-//       result.textHtml = urlB64Decode(part.body.data);
-//     } else if (isPlain && !isAttachment) {
-//       result.textPlain = urlB64Decode(part.body.data);
-//     } else if (isAttachment) {
-//       var body = part.body;
-//       if(!result.attachments) {
-//         result.attachments = [];
-//       }
-//       result.attachments.push({
-//         filename: part.filename,
-//         mimeType: part.mimeType,
-//         size: body.size,
-//         attachmentId: body.attachmentId,
-//         headers: indexHeaders(part.headers)
-//       });
-//     } else if (isInline) {
-//     var body = part.body;
-//     if(!result.inline) {
-//       result.inline = [];
-//     }
-//     result.inline.push({
-//       filename: part.filename,
-//       mimeType: part.mimeType,
-//       size: body.size,
-//       attachmentId: body.attachmentId,
-//       headers: indexHeaders(part.headers)
-//     });
-//   }
+	if (headers.from) {
+		result.sender = headers.from;
+		// return invalid reduced_message if sender is invalid
+		for (const invalid of invalid_senders) {
+			if (result.sender.indexOf(invalid) !== -1) {
+				result.sender = "Error: Invalid Sender";
+				return result;
+			}
+		}
+	}
 
-//     firstPartProcessed = true;
-//   }
+	if (headers.subject) {
+		result.subject = headers.subject;
+	}
 
-//   return result;
-// };
+
+	var parts = [payload];
+	var firstPartProcessed = false;
+
+	while (parts.length !== 0) {
+		var part = parts.shift();
+		if (part.parts) {
+			parts = parts.concat(part.parts);
+		}
+		if (firstPartProcessed) {
+			headers = indexHeaders(part.headers);
+		}
+
+		if (!part.body) {
+			continue;
+		}
+
+		var isHtml = part.mimeType && part.mimeType.indexOf('text/html') !== -1;
+		var isPlain = part.mimeType && part.mimeType.indexOf('text/plain') !== -1;
+		var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().indexOf('attachment') !== -1));
+
+		if (isHtml && !isAttachment) {
+			result.textHtml = urlB64Decode(part.body.data);
+		} else if (isPlain && !isAttachment) {
+			result.textPlain = urlB64Decode(part.body.data);
+		}
+		firstPartProcessed = true;
+	}
+
+	if (payload.body.size > 0) {
+		result.body = urlB64Decode(payload.body.data);
+	}
+
+	const converted_html_to_plain = extractContent(result.textHtml, true);
+	console.log(result.id, converted_html_to_plain);
+
+	// result.full_text = result.textPlain + '\n' + converted_html_to_plain;
+
+	return result;
+};
