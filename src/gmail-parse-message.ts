@@ -1,5 +1,7 @@
 import { decode } from './base64';
+import { encoding_for_model } from "@dqbd/tiktoken";
 
+const encoding = encoding_for_model("gpt-3.5-turbo");
 /**
  * Decodes a url safe Base64 string to its original representation.
  * @param  {string} string
@@ -132,15 +134,21 @@ export const parseMessage = (response: any) => {
 		result.body = urlB64Decode(payload.body.data);
 	}
 
+	let full_text = ""
 	if (result.textPlain === ""){
 		const converted_html_to_plain = extractContent(result.textHtml, true);
-		result.full_text = converted_html_to_plain;
+		full_text = converted_html_to_plain;
 		// console.log(result.id, converted_html_to_plain);
 	}else{
-		result.full_text = result.textPlain;
+		full_text = result.textPlain;
 	}
 
-	result.full_text = result.full_text.replace(/\d/g, '*').replace('\n', '');
+	full_text = full_text.replace(/\d/g, '*').replace('\n', '');
 
+	// check token length and reduce to size
+	// const tokens = encoding.encode(full_text);
+	// console.log(tokens);
+
+	result.full_text = full_text;
 	return result;
 };

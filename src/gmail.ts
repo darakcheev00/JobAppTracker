@@ -40,11 +40,7 @@ export const getMessages = async (token: string | undefined, query: string) => {
         const reduced_messages = await Promise.all(messagePromises);
 
         // Filter out invalid messages
-        const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender");        
-
-        // TODO: check message token length
-
-        // TODO: mask personal information: v1: replace numbers
+        const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender");  
 
         // TODO: chat gpt api
 

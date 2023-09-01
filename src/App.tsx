@@ -1,36 +1,39 @@
-import reactLogo from './assets/react.svg'
+import React from 'react';
+import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, authenticate, logout } from './auth';
 import * as gmail from './gmail';
-import './App.css'
+
+import './App.css';
 
 function App() {
+
 	const [authenticated, setAuthenticated] = useState<boolean | undefined>();
 	const [loading, setLoading] = useState(true);
-	const [authToken, setAuthToken] = useState<string|undefined>("def");
+	const [authToken, setAuthToken] = useState<string | undefined>("def");
 
 	useEffect(() => {
 		console.log("starting....");
 		(async () => {
 			const [isAuthed, tokenObj] = await isAuthenticated();
-			console.log("Init. auth status returned: ",isAuthed);
+			console.log("Init. auth status returned: ", isAuthed);
 			setAuthenticated(isAuthed);
 			setLoading(false);
-			if (isAuthed){
+			if (isAuthed) {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
 			}
-		  })();
-		
+		})();
+
 		// TODO: setup array of applications if doesnt exist in storage
 	}, []);
 
-	useEffect(()=>{
-		if (authToken){
-			console.log("Auth token changed: ",authToken);
+	useEffect(() => {
+		if (authToken) {
+			console.log("Auth token changed: ", authToken);
 			refresh();
 		}
-	},[authToken]);
+	}, [authToken]);
 
 	async function handleLoginClick(){
 		if (loading) return;
@@ -58,13 +61,9 @@ function App() {
 		// TODO: make table, (not visible if not authed)
 	}
 
+
 	return (
-		<>
-			<div>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
+		<div className="App">
 			<h1>Job App Tracker</h1>
 			<div className="card">
 				<button id="auth_btn" onClick={handleLoginClick}>
@@ -73,8 +72,8 @@ function App() {
 				{authenticated && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
 				<h3> {`logged in: ${authenticated}`} </h3>
 			</div>
-		</>
-	)
+		</div>
+	);
 }
 
-export default App
+export default App;
