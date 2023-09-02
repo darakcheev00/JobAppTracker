@@ -1,5 +1,5 @@
 
-const API_KEY = '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';
+const API_KEY = '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';
 
 const context = "You are a job application email analyzer. The emails are sent from the employer that I have applied to. The emails i provide to you are in the format: gptInput = {'sender':msg['sender'],'subject':msg['subject'],'body':msg['body']}. Read this email and output these things: Company name and position name. (If not found then write 'unspecified') Also select which status option describes the email best. Status options: ['application received', 'rejected', 'interview requested', 'received offer','not related to job application','invited to apply']. Gpt output format is a json string containing these keys: 'company', 'position', 'status'. Rules: Use double quotes ('\"') for strings in the json string! Remember the { and } in the json string!. ONLY RETURN THE json string! Do not add any other text! Email: "
 
@@ -36,7 +36,7 @@ export const askGPt = async (sender: string, subject: string, body: string, ) =>
                 const data = await response.json();
                 result = data.choices[0].message.content;
             } else {
-                console.error(`GPT API: Error: Unable to process your request of length(${prompt.length})!`,prompt);
+                // console.error(`GPT API: Error: Unable to process your request of length(${prompt.length})!`,prompt);
                 return null;
             }
         } catch (error) {

@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, authenticate, logout } from './auth';
 import * as gmail from './gmail';
-import { epochToMMDDYY, saveTableData, getTableData, Message } from './utils'
+import { epochToMMDDYY, saveTableData, getTableData, getLatestDate, saveLatestDate, Message } from './utils'
 
 import './App.css';
 
@@ -13,7 +13,7 @@ function App() {
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
-	const [dateLatestRefresh, setDateLatestRefresh] = useState(1693366654);
+	const [dateLatestRefresh, setDateLatestRefresh] = useState<number>(1693366654);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -27,7 +27,9 @@ function App() {
 				setAuthToken(tokenObj.token);
 			}
 
-			// const savedData = await getTableData();
+			setDateLatestRefresh( await getLatestDate());
+
+			// setTableData(await getTableData() as Message[]);
 		})();
 
 		// TODO: setup array of applications if doesnt exist in storage
@@ -57,17 +59,19 @@ function App() {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
 		// TODO: make date dynamic and save to chrome storage
-		const query = "in:inbox after:2023/08/29";
-		const messages: Message[] = await gmail.getMessages(authToken, query) as Message[];
-		console.log("Messages: ", messages);
+		// const query = `in:inbox after:${dateLatestRefresh}`;
+		const query = `in:inbox after:2023/08/29`;
+		const new_messages: Message[] = await gmail.getMessages(authToken, query) as Message[];
+		console.log("Messages: ", new_messages);
 
 		// append to existing messages
 
-		setTableData(messages as Message[]);
+		setTableData(new_messages);
+		// setTableData(tableData?.concat(new_messages));
+		// await saveTableData(new_messages as Message[]);
 
-		// await saveTableData(messages as Message[]);
-
-		// TODO: add new apps to table and edit existing, save to chrome storage
+		setDateLatestRefresh(Date.now());
+		saveLatestDate(Date.now());
 	}
 
 	return (

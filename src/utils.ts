@@ -20,12 +20,15 @@ export const epochToMMDDYY = (epochTime: number) => {
 }
 
 export const getTableData = async() => {
-    return await chrome.storage.local.get('tableData');
+    const data = await chrome.storage.local.get('tableData');
+    const tableData = data.tableData;
+    console.log("Retrieved apps from chrome storage. Count: ",tableData.length);
+    return tableData;
 }
 
 export const saveTableData = async (newData: Message[]) => {
     if (newData){
-        const currData = await getTableData();
+        const currData = await getTableData() as Message[];
         let totalData = newData;
 
         if (currData){
@@ -33,7 +36,21 @@ export const saveTableData = async (newData: Message[]) => {
         }
 
         await chrome.storage.local.set({tableData: totalData}, () => {
-            console.log("Added new data to existing data.");
+            console.log("Added new apps to chrome storage. Count: ",newData.length);
         });
-    }    
+
+    }
 };
+
+export const getLatestDate = async () => {
+    const data = await chrome.storage.local.get('latestDate');
+    const date = data.latestDate;
+    console.log(`Retrieved latest date from chrome storage. Date: ${epochToMMDDYY(parseInt(date))}, ${date}`);
+    return date;    
+}
+
+export const saveLatestDate = async (latestDate: number) => {
+    await chrome.storage.local.set({latestDate: latestDate}, () => {
+        console.log(`Set date in chrome storage: ${epochToMMDDYY(latestDate)}`);
+    });
+}

@@ -36,11 +36,11 @@ function extractContent(s: string, space: boolean) {
 	if (space) {
 		var children = span.querySelectorAll('*');
 		for (var i = 0; i < children.length; i++) {
-			if (children[i].textContent 
+			if (children[i].textContent
 				&& children[i].textContent?.indexOf('@import') === -1
 				&& children[i].textContent?.indexOf('@media') === -1) {
 				children[i].textContent += ' ';
-			}else{
+			} else {
 				children[i].textContent = '';
 			}
 		}
@@ -134,32 +134,36 @@ export const parseMessage = async (response: any) => {
 	}
 
 	let full_text = ""
-	if (messageObj.textPlain === ""){
+	if (messageObj.textPlain === "") {
 		const converted_html_to_plain = extractContent(messageObj.textHtml, true);
 		full_text = converted_html_to_plain;
 		// console.log(messageObj.id, converted_html_to_plain);
-	}else{
+	} else {
 		full_text = messageObj.textPlain;
 	}
 
 	full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
 
 	// call chat gpt
-	if (messageObj.sender !== "Error: Invalid Sender"){
+	if (messageObj.sender !== "Error: Invalid Sender") {
 		const gptRes = await askGPt(messageObj.sender, messageObj.subject, full_text);
+
 		// console.log("Gpt result: ",gptRes);
-		
-		if (gptRes){
-			try{
-				let jsonRes = JSON.parse(gptRes);
-				jsonRes.status.toLowerCase()
-				messageObj.gptRes = jsonRes;
-			} catch (e){
-				console.error(e,gptRes);
+
+		if (gptRes) {
+			const tempLower = gptRes.toLowerCase();
+			if (tempLower.indexOf("not related to job application") === -1) {
+				try {
+					let jsonRes = JSON.parse(gptRes);
+					jsonRes.status.toLowerCase()
+					messageObj.gptRes = jsonRes;
+				} catch (e) {
+					console.error(e, gptRes);
+				}
 			}
 		}
 	}
-	
+
 
 	const result = {
 		id: messageObj.id,
