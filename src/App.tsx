@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, authenticate, logout } from './auth';
 import * as gmail from './gmail';
+import { epochToMMDDYY, saveTableData, getTableData, Message } from './utils'
 
 import './App.css';
 
@@ -11,6 +12,8 @@ function App() {
 	const [authenticated, setAuthenticated] = useState<boolean | undefined>();
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
+	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
+	const [dateLatestRefresh, setDateLatestRefresh] = useState(1693366654);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -23,6 +26,8 @@ function App() {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
 			}
+
+			// const savedData = await getTableData();
 		})();
 
 		// TODO: setup array of applications if doesnt exist in storage
@@ -35,14 +40,14 @@ function App() {
 		}
 	}, [authToken]);
 
-	async function handleLoginClick(){
+	async function handleLoginClick() {
 		if (loading) return;
 
-		if (authenticated){
+		if (authenticated) {
 			await logout();
-		}else{
-			const token :string | undefined = await authenticate();
-			console.log("authenticate returned token: ",token);
+		} else {
+			const token: string | undefined = await authenticate();
+			console.log("authenticate returned token: ", token);
 			setAuthToken(token);
 		}
 		setAuthenticated(!authenticated);
@@ -53,14 +58,17 @@ function App() {
 		console.log("authToken", authToken);
 		// TODO: make date dynamic and save to chrome storage
 		const query = "in:inbox after:2023/08/29";
-		const messages = await gmail.getMessages(authToken, query);
-		console.log(messages);
-		
+		const messages: Message[] = await gmail.getMessages(authToken, query) as Message[];
+		console.log("Messages: ", messages);
+
+		// append to existing messages
+
+		setTableData(messages as Message[]);
+
+		// await saveTableData(messages as Message[]);
+
 		// TODO: add new apps to table and edit existing, save to chrome storage
-
-		// TODO: make table, (not visible if not authed)
 	}
-
 
 	return (
 		<div className="App">
@@ -70,8 +78,28 @@ function App() {
 					{authenticated === undefined ? 'Loading...' : authenticated ? 'Log out' : 'Log in'}
 				</button>
 				{authenticated && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
-				<h3> {`logged in: ${authenticated}`} </h3>
 			</div>
+			{authenticated && (
+				<table>
+					<thead>
+						<tr>
+							<th>Company</th>
+							<th>Position</th>
+							<th>Status</th>
+							<th>Date</th>
+						</tr>
+					</thead>
+					<tbody>
+						{tableData !== undefined && tableData instanceof Array && (tableData.map((item: Message) => (
+							<tr key={item.id}>
+								<td>{item.gptRes.company}</td>
+								<td>{item.gptRes.position}</td>
+								<td>{item.gptRes.status}</td>
+								<td>{epochToMMDDYY(item.internalDate)}</td>
+							</tr>
+						)))}
+					</tbody>
+				</table>)}
 		</div>
 	);
 }

@@ -1,3 +1,10 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
 .App {
   text-align: center;
 }
@@ -26,6 +33,10 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.card {
+  padding: 2em;
 }
 
 @keyframes App-logo-spin {

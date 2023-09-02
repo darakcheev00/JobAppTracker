@@ -32,7 +32,7 @@ export const getMessages = async (token: string | undefined, query: string) => {
                 }
             });
             const full_message = await res.json();
-            const reduced_message = parseMessage(full_message);
+            const reduced_message = await parseMessage(full_message);
             
             return reduced_message;
         });
@@ -40,17 +40,14 @@ export const getMessages = async (token: string | undefined, query: string) => {
         const reduced_messages = await Promise.all(messagePromises);
 
         // Filter out invalid messages
-        const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender");  
-
-        // TODO: chat gpt api
-
-        // TODO: format output for easy display
+        const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && message.gptRes !== null && message.gptRes.status !== "not related to job application");
+        // if (typeof valid_messages !== 'Object')
 
         return valid_messages;
 
     } catch (error) {
         // Handle errors related to the main fetch request
-        console.error("Error fetching messages:", error);
+        console.error("Gmail API: Error fetching messages:", error);
         return {};
     }
 

@@ -1,7 +1,6 @@
 import { decode } from './base64';
-import { encoding_for_model } from "@dqbd/tiktoken";
+import { askGPt } from './gptmodule';
 
-const encoding = encoding_for_model("gpt-3.5-turbo");
 /**
  * Decodes a url safe Base64 string to its original representation.
  * @param  {string} string
@@ -23,9 +22,9 @@ function indexHeaders(headers: any) {
 	if (!headers) {
 		return {};
 	} else {
-		return headers.reduce(function (result: any, header: any) {
-			result[header.name.toLowerCase()] = header.value;
-			return result;
+		return headers.reduce(function (messageObj: any, header: any) {
+			messageObj[header.name.toLowerCase()] = header.value;
+			return messageObj;
 		}, {});
 	}
 }
@@ -60,8 +59,8 @@ const invalid_senders = ['linkedin.com', '@remotemore.com', '@eg.vrbo.com', '@se
  * @param  {object} response
  * @return {object}
  */
-export const parseMessage = (response: any) => {
-	var result = {
+export const parseMessage = async (response: any) => {
+	var messageObj = {
 		id: response.id,
 		snippet: response.snippet,
 		sender: "Error: Invalid Sender",
@@ -70,35 +69,35 @@ export const parseMessage = (response: any) => {
 		textHtml: "",
 		textPlain: "",
 		body: "",
-		full_text: ""
+		gptRes: null
 	};
 
 	// TODO: combine text into one string
 
 	if (response.internalDate) {
-		result.internalDate = parseInt(response.internalDate);
+		messageObj.internalDate = parseInt(response.internalDate);
 	}
 
 	var payload = response.payload;
 	if (!payload) {
-		return result;
+		return messageObj;
 	}
 
 	var headers = indexHeaders(payload.headers);
 
 	if (headers.from) {
-		result.sender = headers.from;
+		messageObj.sender = headers.from;
 		// return invalid reduced_message if sender is invalid
 		for (const invalid of invalid_senders) {
-			if (result.sender.indexOf(invalid) !== -1) {
-				result.sender = "Error: Invalid Sender";
-				return result;
+			if (messageObj.sender.indexOf(invalid) !== -1) {
+				messageObj.sender = "Error: Invalid Sender";
+				return messageObj;
 			}
 		}
 	}
 
 	if (headers.subject) {
-		result.subject = headers.subject;
+		messageObj.subject = headers.subject;
 	}
 
 
@@ -123,32 +122,52 @@ export const parseMessage = (response: any) => {
 		var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().indexOf('attachment') !== -1));
 
 		if (isHtml && !isAttachment) {
-			result.textHtml = urlB64Decode(part.body.data);
+			messageObj.textHtml = urlB64Decode(part.body.data);
 		} else if (isPlain && !isAttachment) {
-			result.textPlain = urlB64Decode(part.body.data);
+			messageObj.textPlain = urlB64Decode(part.body.data);
 		}
 		firstPartProcessed = true;
 	}
 
 	if (payload.body.size > 0) {
-		result.body = urlB64Decode(payload.body.data);
+		messageObj.body = urlB64Decode(payload.body.data);
 	}
 
 	let full_text = ""
-	if (result.textPlain === ""){
-		const converted_html_to_plain = extractContent(result.textHtml, true);
+	if (messageObj.textPlain === ""){
+		const converted_html_to_plain = extractContent(messageObj.textHtml, true);
 		full_text = converted_html_to_plain;
-		// console.log(result.id, converted_html_to_plain);
+		// console.log(messageObj.id, converted_html_to_plain);
 	}else{
-		full_text = result.textPlain;
+		full_text = messageObj.textPlain;
 	}
 
-	full_text = full_text.replace(/\d/g, '*').replace('\n', '');
+	full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
 
-	// check token length and reduce to size
-	// const tokens = encoding.encode(full_text);
-	// console.log(tokens);
+	// call chat gpt
+	if (messageObj.sender !== "Error: Invalid Sender"){
+		const gptRes = await askGPt(messageObj.sender, messageObj.subject, full_text);
+		// console.log("Gpt result: ",gptRes);
+		
+		if (gptRes){
+			try{
+				let jsonRes = JSON.parse(gptRes);
+				jsonRes.status.toLowerCase()
+				messageObj.gptRes = jsonRes;
+			} catch (e){
+				console.error(e,gptRes);
+			}
+		}
+	}
+	
 
-	result.full_text = full_text;
+	const result = {
+		id: messageObj.id,
+		sender: messageObj.sender,
+		snippet: messageObj.snippet,
+		internalDate: messageObj.internalDate,
+		gptRes: messageObj.gptRes,
+	}
+
 	return result;
 };
