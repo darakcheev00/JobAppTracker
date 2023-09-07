@@ -41,7 +41,7 @@ function App() {
 		if (authToken && tableData && dateNewestMsg) {
 			// console.log("Auth token changed: ", authToken);
 			console.log("useEffect");
-			refresh();
+			// refresh();
 		}
 	}, [authToken,tableData,dateNewestMsg]);
 
