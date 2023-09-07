@@ -38,11 +38,12 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		if (authToken) {
-			console.log("Auth token changed: ", authToken);
-			// refresh();
+		if (authToken && tableData && dateNewestMsg) {
+			// console.log("Auth token changed: ", authToken);
+			console.log("useEffect");
+			refresh();
 		}
-	}, [authToken]);
+	}, [authToken,tableData,dateNewestMsg]);
 
 	useEffect(() => {
 		console.log("tableData changed: ", tableData);
