@@ -63,12 +63,10 @@ function App() {
 	const refresh = async () => {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
-		console.log(`query: in:inbox category:primary after:${new Date(dateLatestRefresh)}`)
-		// const query = `in:inbox after:${dateLatestRefresh}`;
-		const query = `in:inbox category:primary after:${1694063429}`;
-		// const query = `in:inbox after:2023/
 
-		const new_messages: Message[] = await gmail.getMessages(authToken, query) as Message[];
+		const new_messages: Message[] = await gmail.getMessages(authToken, dateLatestRefresh) as Message[];
+
+
 		console.log("Messages: ", new_messages);
 
 		// append to existing messages
