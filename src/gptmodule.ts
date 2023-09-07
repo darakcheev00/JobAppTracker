@@ -33,7 +33,7 @@ export const askGPt = async (sender: string, subject: string, body: string, ) =>
             });
 
             if (response.ok) {  
-
+                console.log("GPT called");
                 const data = await response.json();
                 result = data.choices[0].message.content;
             } else {
@@ -48,9 +48,9 @@ export const askGPt = async (sender: string, subject: string, body: string, ) =>
     }
 
     result = result.slice(result.lastIndexOf('{'),result.lastIndexOf('}')+1)
+        .replace("Levi's",'Levis')
         .replace(/'/g, '"')
         .replace(/\\/g, '');
-        
 
     
     return result;

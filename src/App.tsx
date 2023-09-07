@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, authenticate, logout } from './auth';
 import * as gmail from './gmail';
-import { epochToMMDDYY, saveTableData, getTableData, clearTableData, getLatestDate, saveLatestDate, Message } from './utils'
+import { StorageManager, Message } from './chrome-storage-utils'
 
 import './App.css';
 import { table } from 'console';
@@ -14,7 +14,7 @@ function App() {
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
-	const [dateLatestRefresh, setDateLatestRefresh] = useState<number>(1693366654);
+	const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -28,10 +28,11 @@ function App() {
 				setAuthToken(tokenObj.token);
 			}
 
-			setDateLatestRefresh(await getLatestDate());
+			// await StorageManager.clearTableData();
+			// await StorageManager.resetLatestDate();
 
-			// await clearTableData();
-			setTableData(await getTableData() as Message[]);
+			setDateNewestMsg(await StorageManager.getLatestDate());
+			setTableData(await StorageManager.getTableData() as Message[]);
 		})();
 
 	}, []);
@@ -64,24 +65,28 @@ function App() {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
 
-		const new_messages: Message[] = await gmail.getMessages(authToken, dateLatestRefresh) as Message[];
+		const { validMessages, newestMsgDate } = await gmail.getMessages(authToken, dateNewestMsg);
 
-
-		console.log("Messages: ", new_messages);
+		console.log("Messages: ", validMessages);
 
 		// append to existing messages
-		if (new_messages !== undefined && new_messages.length > 0) {
-			if (Array.isArray(new_messages) && Array.isArray(tableData)) {
-				setTableData(new_messages.concat(tableData));
+		if (validMessages !== undefined && validMessages.length > 0) {
+			if (Array.isArray(validMessages) && Array.isArray(tableData)) {
+				setTableData(validMessages.concat(tableData));
 			} else {
-				setTableData(new_messages);
+				setTableData(validMessages);
 			}
+			// persist new mail
+			await StorageManager.saveTableData(validMessages as Message[]);
 		}
-		await saveTableData(new_messages as Message[]);
 
 		// save latest refresh click
-		setDateLatestRefresh(Date.now());
-		saveLatestDate(Date.now());
+		if (newestMsgDate !== undefined) {
+			const offSet: number = 1000;
+			setDateNewestMsg(newestMsgDate + offSet);
+			StorageManager.saveNewestMsgDate(newestMsgDate + offSet);
+		}
+
 	}
 
 
@@ -113,7 +118,7 @@ function App() {
 									<td>{item.gptRes.company}</td>
 									<td>{item.gptRes.position}</td>
 									<td>{item.gptRes.status}</td>
-									<td>{epochToMMDDYY(item.internalDate)}</td>
+									<td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
 								</tr>
 							)))}
 					</tbody>
