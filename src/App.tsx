@@ -3,9 +3,10 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, authenticate, logout } from './auth';
 import * as gmail from './gmail';
-import { epochToMMDDYY, saveTableData, getTableData, getLatestDate, saveLatestDate, Message } from './utils'
+import { epochToMMDDYY, saveTableData, getTableData, clearTableData, getLatestDate, saveLatestDate, Message } from './utils'
 
 import './App.css';
+import { table } from 'console';
 
 function App() {
 
@@ -27,20 +28,24 @@ function App() {
 				setAuthToken(tokenObj.token);
 			}
 
-			setDateLatestRefresh( await getLatestDate());
+			setDateLatestRefresh(await getLatestDate());
 
-			// setTableData(await getTableData() as Message[]);
+			// await clearTableData();
+			setTableData(await getTableData() as Message[]);
 		})();
 
-		// TODO: setup array of applications if doesnt exist in storage
 	}, []);
 
 	useEffect(() => {
 		if (authToken) {
 			console.log("Auth token changed: ", authToken);
-			refresh();
+			// refresh();
 		}
 	}, [authToken]);
+
+	useEffect(() => {
+		console.log("tableData changed: ", tableData);
+	}, [tableData]);
 
 	async function handleLoginClick() {
 		if (loading) return;
@@ -58,21 +63,29 @@ function App() {
 	const refresh = async () => {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
-		// TODO: make date dynamic and save to chrome storage
+		console.log(`query: in:inbox category:primary after:${new Date(dateLatestRefresh)}`)
 		// const query = `in:inbox after:${dateLatestRefresh}`;
-		const query = `in:inbox after:2023/08/29`;
+		const query = `in:inbox category:primary after:${1694063429}`;
+		// const query = `in:inbox after:2023/
+
 		const new_messages: Message[] = await gmail.getMessages(authToken, query) as Message[];
 		console.log("Messages: ", new_messages);
 
 		// append to existing messages
+		if (new_messages !== undefined && new_messages.length > 0) {
+			if (Array.isArray(new_messages) && Array.isArray(tableData)) {
+				setTableData(new_messages.concat(tableData));
+			} else {
+				setTableData(new_messages);
+			}
+		}
+		await saveTableData(new_messages as Message[]);
 
-		setTableData(new_messages);
-		// setTableData(tableData?.concat(new_messages));
-		// await saveTableData(new_messages as Message[]);
-
+		// save latest refresh click
 		setDateLatestRefresh(Date.now());
 		saveLatestDate(Date.now());
 	}
+
 
 	return (
 		<div className="App">
@@ -84,7 +97,7 @@ function App() {
 				{authenticated && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
 			</div>
 			{authenticated && (
-				<table>
+				<table className="maintable">
 					<thead>
 						<tr>
 							<th>Company</th>
@@ -94,14 +107,17 @@ function App() {
 						</tr>
 					</thead>
 					<tbody>
-						{tableData !== undefined && tableData instanceof Array && (tableData.map((item: Message) => (
-							<tr key={item.id}>
-								<td>{item.gptRes.company}</td>
-								<td>{item.gptRes.position}</td>
-								<td>{item.gptRes.status}</td>
-								<td>{epochToMMDDYY(item.internalDate)}</td>
-							</tr>
-						)))}
+						{tableData !== undefined &&
+							tableData instanceof Array &&
+							tableData.length > 0 &&
+							(tableData.map((item: Message) => (
+								<tr key={item.id}>
+									<td>{item.gptRes.company}</td>
+									<td>{item.gptRes.position}</td>
+									<td>{item.gptRes.status}</td>
+									<td>{epochToMMDDYY(item.internalDate)}</td>
+								</tr>
+							)))}
 					</tbody>
 				</table>)}
 		</div>

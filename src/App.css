@@ -9,7 +9,7 @@
   text-align: center;
 }
 
-.App-logo {
+/* .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
@@ -18,7 +18,7 @@
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
-}
+} */
 
 .App-header {
   background-color: #282c34;
@@ -46,4 +46,55 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* App.css */
+
+/* Apply styles to the main table */
+.maintable {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-y: auto;
+  max-height: 300px; /* Adjust the maximum height as needed */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Style table header */
+.maintable th {
+  background-color: #3e6d43;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Style table rows */
+.maintable td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Style odd rows with a different background color
+.maintable tr:nth-child(odd) {
+  background-color: #545454;
+} */
+
+/* Add a scrollbar for the table body */
+.maintable tbody {
+  /* display: block; */
+  overflow-y: scroll;
+  max-height: 300px; /* Adjust the maximum height as needed */
+}
+
+/* Style the scrollbar (customize as needed) */
+.maintable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.maintable::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.maintable::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
 }

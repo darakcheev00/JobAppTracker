@@ -20,9 +20,18 @@ export const getMessages = async (token: string | undefined, query: string) => {
         const info = await data.json();
 
         if (info.messages === undefined) {
-            console.error("Error: ", info);
+            console.log("GMAIL API: no new messages");
             return {};
         }
+
+        const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${info.messages[0].id}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+        const firstMessage = await res.json();
+        const firstMsgDate = firstMessage.internalDate;
 
         const messagePromises = info.messages.map(async (msg: any) => {
             const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
@@ -43,15 +52,13 @@ export const getMessages = async (token: string | undefined, query: string) => {
         const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && message.gptRes !== null && message.gptRes.status !== "not related to job application");
         // if (typeof valid_messages !== 'Object')
 
-        return valid_messages;
+        return [valid_messages, firstMsgDate];
 
     } catch (error) {
         // Handle errors related to the main fetch request
         console.error("Gmail API: Error fetching messages:", error);
         return {};
     }
-
-    
 }
 
 

@@ -143,6 +143,8 @@ export const parseMessage = async (response: any) => {
 	}
 
 	full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
+	console.log(`!!full text has ${full_text.indexOf('http')} links`);
+
 
 	// call chat gpt
 	if (messageObj.sender !== "Error: Invalid Sender") {
