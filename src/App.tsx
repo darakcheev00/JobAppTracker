@@ -1,12 +1,15 @@
 import React from 'react';
 import logo from './logo.svg';
 import { useState, useEffect } from 'react';
-import { isAuthenticated, authenticate, logout } from './auth';
-import * as gmail from './gmail';
+import { AuthManager } from './auth';
+import { GmailApiManager } from './gmail';
 import { StorageManager, Message } from './chrome-storage-utils'
+import { GptManager } from './gptmodule';
+
 
 import './App.css';
 import { table } from 'console';
+import { auth } from 'googleapis/build/src/apis/abusiveexperiencereport';
 
 function App() {
 
@@ -19,7 +22,7 @@ function App() {
 	useEffect(() => {
 		console.log("starting....");
 		(async () => {
-			const [isAuthed, tokenObj] = await isAuthenticated();
+			const [isAuthed, tokenObj] = await AuthManager.isAuthenticated();
 			console.log("Init. auth status returned: ", isAuthed);
 			setAuthenticated(isAuthed);
 			setLoading(false);
@@ -53,9 +56,9 @@ function App() {
 		if (loading) return;
 
 		if (authenticated) {
-			await logout();
+			await AuthManager.logout();
 		} else {
-			const token: string | undefined = await authenticate();
+			const token: string | undefined = await AuthManager.authenticate();
 			console.log("authenticate returned token: ", token);
 			setAuthToken(token);
 		}
@@ -65,8 +68,18 @@ function App() {
 	const refresh = async () => {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
+		let token: string | undefined = authToken;
 
-		const { validMessages, newestMsgDate } = await gmail.getMessages(authToken, dateNewestMsg);
+		if (!await GptManager.healthCheck()){
+			return;
+		}
+
+		if (!await GmailApiManager.healthCheck(authToken)){
+			token = await AuthManager.authenticate();
+			setAuthToken(token);
+		}
+
+		const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(token, dateNewestMsg);
 
 		console.log("Messages: ", validMessages);
 

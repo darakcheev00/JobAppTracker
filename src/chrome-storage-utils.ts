@@ -38,7 +38,7 @@ export class StorageManager {
     static saveTableData = async (newData: Message[]) => {
         if (newData !== undefined && newData.length > 0) {
             console.log("Saving data to storage...");
-            let currData: Message[] = await StorageManager.getTableData() as Message[];
+            let currData: Message[] = await this.getTableData() as Message[];
             let totalData = newData;
 
             if (!Array.isArray(currData)) {

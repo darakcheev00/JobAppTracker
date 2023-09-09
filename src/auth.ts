@@ -1,47 +1,51 @@
-export async function isAuthenticated() {
-    const data = await chrome.storage.local.get('authToken');
-    const authToken = data.authToken;
-    console.log("Token retrieved: ",authToken);
-    const authenticated = authToken !== undefined && authToken !== null;
+export class AuthManager {
 
-    // DEBUG
-    console.log("isAuthenticated: ", authenticated);
-    
-    return [authenticated, authToken];
-};
+    static isAuthenticated = async () => {
+        const data = await chrome.storage.local.get('authToken');
+        const authToken = data.authToken;
+        console.log("Token retrieved: ", authToken);
+        const authenticated = authToken !== undefined && authToken !== null;
 
-export async function setAuthTokenAsync(token: {}) {
-    await chrome.storage.local.set({authToken: token}, () => {
-        console.log("Token stored: ", token);
-    });
-};
+        // DEBUG
+        console.log("isAuthenticated: ", authenticated);
+
+        return [authenticated, authToken];
+    };
+
+    static setAuthTokenAsync = async (token: {}) => {
+        await chrome.storage.local.set({ authToken: token }, () => {
+            console.log("Token stored: ", token);
+        });
+    };
 
 
-export async function authenticate() {
-    console.log("Authenticating...");
-    const authToken = await chrome.identity.getAuthToken({interactive: true});
-    
-    await setAuthTokenAsync(authToken);
-    console.log("Authenticated! Token: ",authToken);
+    static authenticate = async () => {
+        console.log("Authenticating...");
+        const authToken = await chrome.identity.getAuthToken({ interactive: true });
 
-    // DEBUG
-    const [_,resToken] = await isAuthenticated();
-    console.log("Logged in. Auth:",resToken);
+        await this.setAuthTokenAsync(authToken);
+        console.log("Authenticated! Token: ", authToken);
 
-    return authToken.token;
-}
+        // DEBUG
+        const [_, resToken] = await this.isAuthenticated();
+        console.log("Logged in. Auth:", resToken);
 
-export async function getUserEmail(){
-    chrome.identity.getProfileUserInfo((info)=>{
-        console.log(info.email);
-    });
-}
+        return authToken.token;
+    }
 
-export async function logout() {
-    console.log("Logging out...");
-    await chrome.storage.local.remove('authToken');
+    static getUserEmail = async () => {
+        await chrome.identity.getProfileUserInfo((info) => {
+            console.log(info.email);
+        });
+    }
 
-    // DEBUG
-    const [_,authToken] = await isAuthenticated();
-    console.log("User logged out. Auth:",authToken);
+    static logout = async () => {
+        console.log("Logging out...");
+        await chrome.storage.local.remove('authToken');
+
+        // DEBUG
+        const [_, authToken] = await this.isAuthenticated();
+        console.log("User logged out. Auth:", authToken);
+    }
+
 }

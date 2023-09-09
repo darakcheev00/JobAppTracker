@@ -1,5 +1,5 @@
 import { decode } from './base64';
-import { askGPt } from './gptmodule';
+import { GptManager } from './gptmodule';
 
 /**
  * Decodes a url safe Base64 string to its original representation.
@@ -148,7 +148,7 @@ export const parseMessage = async (response: any) => {
 
 	// call chat gpt
 	if (messageObj.sender !== "Error: Invalid Sender") {
-		const gptRes = await askGPt(messageObj.sender, messageObj.subject, full_text);
+		const gptRes = await GptManager.askGPt(messageObj.sender, messageObj.subject, full_text);
 
 		// console.log("Gpt result: ",gptRes);
 
