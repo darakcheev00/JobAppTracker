@@ -9,3 +9,4 @@
 9) more gpt key into settings page and add an icon or message at top of main page saying gpt key is invalid
 10) add url to how-to-get-gpt-api-key
 11) add section explain how it works, transparency
+12) invalid senders input box
