@@ -1,3 +1,5 @@
+[>>>>>> How to setup extension manually <<<<<<](https://thoracic-hill-6c7.notion.site/Job-tracker-c8be338286574db1bdd32c980301fe05?pvs=4)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
