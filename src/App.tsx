@@ -5,6 +5,7 @@ import { AuthManager } from './auth';
 import { GmailApiManager } from './gmail';
 import { StorageManager, Message } from './chrome-storage-utils'
 import { GptManager } from './gptmodule';
+import GptForm from './GptForm';
 
 
 import './App.css';
@@ -18,6 +19,8 @@ function App() {
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
 	const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
+	const [gptKey, setGptKey] = useState<string | undefined>('***');
+	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -34,19 +37,18 @@ function App() {
 			// await StorageManager.clearTableData();
 			// await StorageManager.resetLatestDate();
 
+			const savedGptKey = await StorageManager.getGptKey();
+			console.log(`saved gpt key: ${savedGptKey}`)
+			setGptKeyValid(await GptManager.healthCheck(savedGptKey));
+			if (savedGptKey !== undefined){
+				setGptKey(savedGptKey);
+			}
+
 			setDateNewestMsg(await StorageManager.getLatestDate());
 			setTableData(await StorageManager.getTableData() as Message[]);
 		})();
 
 	}, []);
-
-	useEffect(() => {
-		if (authToken && tableData && dateNewestMsg) {
-			// console.log("Auth token changed: ", authToken);
-			console.log("useEffect");
-			// refresh();
-		}
-	}, [authToken,tableData,dateNewestMsg]);
 
 	useEffect(() => {
 		console.log("tableData changed: ", tableData);
@@ -68,20 +70,20 @@ function App() {
 	const refresh = async () => {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
-		let token: string | undefined = authToken;
+		let gmailToken: string | undefined = authToken;
 
-		if (!await GptManager.healthCheck()){
+		if (!await GptManager.healthCheck(gptKey)) {
 			return;
 		}
 
-		if (!await GmailApiManager.healthCheck(authToken)){
-			token = await AuthManager.authenticate();
-			setAuthToken(token);
+		if (!await GmailApiManager.healthCheck(authToken)) {
+			gmailToken = await AuthManager.authenticate();
+			setAuthToken(gmailToken);
 		}
 
-		const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(token, dateNewestMsg);
+		const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey);
 
-		console.log("Messages: ", validMessages);
+		// console.log("Messages: ", validMessages);
 
 		// append to existing messages
 		if (validMessages !== undefined && validMessages.length > 0) {
@@ -96,14 +98,13 @@ function App() {
 
 		// save latest refresh click
 		if (newestMsgDate !== undefined) {
-			const offSet: number = 1000;
+			const offSet: number = 10000;
 			setDateNewestMsg(newestMsgDate + offSet);
 			StorageManager.saveNewestMsgDate(newestMsgDate + offSet);
 		}
 
 	}
-
-
+	
 	return (
 		<div className="App">
 			<h1>Job App Tracker</h1>
@@ -111,8 +112,11 @@ function App() {
 				<button id="auth_btn" onClick={handleLoginClick}>
 					{authenticated === undefined ? 'Loading...' : authenticated ? 'Log out' : 'Log in'}
 				</button>
-				{authenticated && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
+				{authenticated && gptKeyValid && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
 			</div>
+
+			{!gptKeyValid && authenticated && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid}/>}
+
 			{authenticated && (
 				<table className="maintable">
 					<thead>

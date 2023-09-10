@@ -75,4 +75,17 @@ export class StorageManager {
             console.log("Reset latest date to ", new Date(resetDate));
         });
     }
+
+    static setGptKey = async (key: string) => {
+        await chrome.storage.local.set({ gptKey: key }, () => {
+            console.log(`Gpt key stored`);
+        });
+    };
+
+    static getGptKey = async () => {
+        const data = await chrome.storage.local.get('gptKey');
+        console.log(`Retrieved gpt key from chrome storage.`);
+        return data.gptKey;
+    };
+
 }
