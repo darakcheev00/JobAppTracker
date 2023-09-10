@@ -58,8 +58,13 @@ export class StorageManager {
 
     static getLatestDate = async () => {
         const data = await chrome.storage.local.get('latestDate');
-        const date = data.latestDate;
-        console.log(`Retrieved latest date from chrome storage. Date: ${date}, = ${new Date(date)}`);
+        let date = data.latestDate;
+        if (date === undefined){
+            date = 1693607827000;
+            console.log(`no date found in storage. setting to ${date}`);
+        }else{
+            console.log(`Retrieved latest date from chrome storage. Date: ${date}, = ${new Date(date)}`);
+        }
         return date;
     }
 
