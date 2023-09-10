@@ -141,7 +141,7 @@ function App() {
 			)}
 
 
-			{!gptKeyValid && authenticated && !showSettings && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} />}
+			{!gptKeyValid && authenticated && !showSettings && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg}/>}
 
 			{authenticated && !showSettings && (
 				<table className="maintable">
