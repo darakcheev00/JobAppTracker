@@ -1,11 +1,12 @@
 import React from 'react';
 import logo from './logo.svg';
 import { useState, useEffect } from 'react';
-import { AuthManager } from './auth';
+import AuthManager from './auth';
 import { GmailApiManager } from './gmail';
 import { StorageManager, Message } from './chrome-storage-utils'
 import { GptManager } from './gptmodule';
 import GptForm from './GptForm';
+import Settings from './Settings';
 
 
 import './App.css';
@@ -22,6 +23,8 @@ function App() {
 	const [gptKey, setGptKey] = useState<string | undefined>('***');
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 	const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
+	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
+
 
 	useEffect(() => {
 		console.log("starting....");
@@ -41,7 +44,7 @@ function App() {
 			const savedGptKey = await StorageManager.getGptKey();
 			console.log(`saved gpt key: ${savedGptKey}`)
 			setGptKeyValid(await GptManager.healthCheck(savedGptKey));
-			if (savedGptKey !== undefined){
+			if (savedGptKey !== undefined) {
 				setGptKey(savedGptKey);
 			}
 
@@ -58,15 +61,12 @@ function App() {
 	async function handleLoginClick() {
 		if (loading) return;
 
-		if (authenticated) {
-			await AuthManager.logout();
-		} else {
-			const token: string | undefined = await AuthManager.authenticate();
-			console.log("authenticate returned token: ", token);
-			setAuthToken(token);
-		}
-		setAuthenticated(!authenticated);
+		const token: string | undefined = await AuthManager.authenticate();
+		console.log("authenticate returned token: ", token);
+		setAuthToken(token);
+		setAuthenticated(true);
 	};
+
 
 	const refresh = async () => {
 		console.log("Refreshing...");
@@ -98,11 +98,11 @@ function App() {
 			await StorageManager.saveTableData(validMessages as Message[]);
 			displayMsg = `${validMessages.length} new emails added!`;
 		}
-		
+
 		setRefreshMsg(displayMsg);
 		setTimeout(() => {
 			setRefreshMsg("")
-		},3000);
+		}, 3000);
 
 		// save latest refresh click
 		if (newestMsgDate !== undefined) {
@@ -112,27 +112,38 @@ function App() {
 		}
 
 	}
-	
+
 	return (
 		<div className="App">
-			<h1>Job App Tracker</h1>
-			<div className="card">
-				<button id="auth_btn" onClick={handleLoginClick}>
-					{authenticated === undefined ? 'Loading...' : authenticated ? 'Log out' : 'Log in'}
-				</button>
-				{authenticated && gptKeyValid && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
-			</div>
+			<h1 className="title">Job App Tracker</h1>
 
-			{authenticated && gptKeyValid && (
-				<h4>
-					{refreshMsg}
-				</h4>
+			{authenticated && showSettings && <Settings setAuthenticated={setAuthenticated} setShowSettings={setShowSettings} />}
+
+			{authenticated &&
+				<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>
+					{!showSettings ? 'Settings' : 'Back'}
+				</button>
+			}
+
+			{!authenticated && <button id="login_btn" onClick={handleLoginClick}>
+				Log in
+			</button>}
+
+
+			{!showSettings &&
+				<div className="card">
+					{authenticated && gptKeyValid && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
+				</div>
+			}
+
+			{authenticated && gptKeyValid && !showSettings && (
+				<h4>{refreshMsg}</h4>
 			)}
 
 
-			{!gptKeyValid && authenticated && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid}/>}
+			{!gptKeyValid && authenticated && !showSettings && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} />}
 
-			{authenticated && (
+			{authenticated && !showSettings && (
 				<table className="maintable">
 					<thead>
 						<tr>

@@ -1,4 +1,4 @@
-export class AuthManager {
+export default class AuthManager {
 
     static isAuthenticated = async () => {
         const data = await chrome.storage.local.get('authToken');
