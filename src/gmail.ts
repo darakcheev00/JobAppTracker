@@ -84,11 +84,16 @@ export class GmailApiManager {
             });
 
             const reduced_messages = await Promise.all(messagePromises);
+            console.log("async promises completed.");
 
             // Filter out invalid messages
-            const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && message.gptRes !== null && message.gptRes.status !== "not related to job application" && message.gptRes.company !== "unspecified");
-            // if (typeof valid_messages !== 'Object')
-
+            const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && 
+                                                            message.gptRes !== null && 
+                                                            message.gptRes !== undefined && 
+                                                            message.gptRes.status !== "not related to job application" && 
+                                                            message.gptRes.company !== "unspecified");
+            
+            console.log("messages filtered.");
             return {
                 validMessages: valid_messages,
                 newestMsgDate: updatedNewestMsgDate,

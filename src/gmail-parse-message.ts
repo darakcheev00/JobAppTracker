@@ -152,11 +152,11 @@ export class MessageParser {
 		// call chat gpt
 		if (messageObj.sender !== "Error: Invalid Sender") {
 			let gptRes = await this.callGpt(messageObj, full_text, gptKey);
-			if (gptRes.company === "unspecified" || gptRes.position === "unspecified"){
-				console.log("running gpt once more");
-				// TODO: modify prompt to say try again
-				gptRes = await this.callGpt(messageObj, full_text, gptKey);
-			}
+			// if (gptRes.company === "unspecified" || gptRes.position === "unspecified"){
+			// 	console.log("running gpt once more");
+			// 	// TODO: modify prompt to say try again
+			// 	gptRes = await this.callGpt(messageObj, full_text, gptKey);
+			// }
 			messageObj.gptRes = gptRes;
 		}
 

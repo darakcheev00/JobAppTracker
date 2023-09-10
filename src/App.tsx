@@ -21,6 +21,7 @@ function App() {
 	const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
 	const [gptKey, setGptKey] = useState<string | undefined>('***');
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
+	const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
 
 	useEffect(() => {
 		console.log("starting....");
@@ -83,9 +84,10 @@ function App() {
 
 		const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey);
 
-		// console.log("Messages: ", validMessages);
+		console.log("Messages: ", validMessages);
 
 		// append to existing messages
+		let displayMsg = "No new emails."
 		if (validMessages !== undefined && validMessages.length > 0) {
 			if (Array.isArray(validMessages) && Array.isArray(tableData)) {
 				setTableData(validMessages.concat(tableData));
@@ -94,7 +96,13 @@ function App() {
 			}
 			// persist new mail
 			await StorageManager.saveTableData(validMessages as Message[]);
+			displayMsg = `${validMessages.length} new emails added!`;
 		}
+		
+		setRefreshMsg(displayMsg);
+		setTimeout(() => {
+			setRefreshMsg("")
+		},3000);
 
 		// save latest refresh click
 		if (newestMsgDate !== undefined) {
@@ -114,6 +122,13 @@ function App() {
 				</button>
 				{authenticated && gptKeyValid && (<button onClick={refresh} id="refresh_btn"> Refresh </button>)}
 			</div>
+
+			{authenticated && gptKeyValid && (
+				<h4>
+					{refreshMsg}
+				</h4>
+			)}
+
 
 			{!gptKeyValid && authenticated && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid}/>}
 
