@@ -149,27 +149,16 @@ export class MessageParser {
 		full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
 		console.log(`!!full text has ${full_text.indexOf('http')} links`);
 
-
 		// call chat gpt
 		if (messageObj.sender !== "Error: Invalid Sender") {
-			const gptRes = await GptManager.askGPt(messageObj.sender, messageObj.subject, full_text, gptKey);
-
-			// console.log("Gpt result: ",gptRes);
-
-			if (gptRes) {
-				const tempLower = gptRes.toLowerCase();
-				if (tempLower.indexOf("not related to job application") === -1) {
-					try {
-						let jsonRes = JSON.parse(gptRes);
-						jsonRes.status.toLowerCase()
-						messageObj.gptRes = jsonRes;
-					} catch (e) {
-						console.error(e, gptRes);
-					}
-				}
+			let gptRes = await this.callGpt(messageObj, full_text, gptKey);
+			if (gptRes.company === "unspecified" || gptRes.position === "unspecified"){
+				console.log("running gpt once more");
+				// TODO: modify prompt to say try again
+				gptRes = await this.callGpt(messageObj, full_text, gptKey);
 			}
+			messageObj.gptRes = gptRes;
 		}
-
 
 		const result = {
 			id: messageObj.id,
@@ -181,4 +170,25 @@ export class MessageParser {
 
 		return result;
 	};
+
+	static callGpt = async(messageObj:any, full_text:string, gptKey:string|undefined) => {
+
+		const gptRes = await GptManager.askGPt(messageObj.sender, messageObj.subject, full_text, gptKey);
+
+		// console.log("Gpt result: ",gptRes);
+
+		if (gptRes) {
+			const tempLower = gptRes.toLowerCase();
+			if (tempLower.indexOf("not related to job application") === -1) {
+				try {
+					let jsonRes = JSON.parse(gptRes);
+					jsonRes.status.toLowerCase()
+					return jsonRes;
+				} catch (e) {
+					console.error(e, gptRes);
+					return {};
+				}
+			}
+		}
+	}
 }

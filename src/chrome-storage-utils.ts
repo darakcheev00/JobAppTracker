@@ -88,4 +88,10 @@ export class StorageManager {
         return data.gptKey;
     };
 
+    static clearGptKey = async () => {
+        await chrome.storage.local.set({ gptKey: "" }, () => {
+            console.log(`Gpt key cleared`);
+        });
+    };
+
 }
