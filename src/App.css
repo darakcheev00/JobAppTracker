@@ -58,7 +58,9 @@
   }
 }
 
-/* App.css */
+.table-counts {
+  text-align: center;
+}
 
 /* Apply styles to the main table */
 .maintable {

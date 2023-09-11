@@ -10,3 +10,5 @@
 10) add url to how-to-get-gpt-api-key
 11) add section explain how it works, transparency
 12) invalid senders input box
+13) add counts
+14) add refill from custom start date option, with message "(expensive)"

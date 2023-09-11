@@ -29,7 +29,7 @@ export default function GptForm({ setGptKey, setGptKeyValid, setRefreshMsg}: Gpt
         setRefreshMsg(displayMsg);
 		setTimeout(() => {
 			setRefreshMsg("")
-		}, 4000);
+		}, 5000);
 
         reset({
             gptkeyInput: '',

@@ -8,10 +8,16 @@ import { GptManager } from './gptmodule';
 import GptForm from './GptForm';
 import Settings from './Settings';
 
-
 import './App.css';
 import { table } from 'console';
 import { auth } from 'googleapis/build/src/apis/abusiveexperiencereport';
+
+interface TableCounts {
+	appsReceived: number;
+	rejected: number;
+	interviews: number;
+	offers: number;
+}
 
 function App() {
 
@@ -24,6 +30,7 @@ function App() {
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 	const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
+	const [tableCounts, setTableCounts] = useState<TableCounts>();
 
 
 	useEffect(() => {
@@ -55,8 +62,17 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		console.log("tableData changed: ", tableData);
+		if (tableData !== undefined) {
+			console.log("tableData changed: ", tableData);
+			setTableCounts({
+				appsReceived: tableData?.filter(item => item.gptRes.status === "application received").length,
+				rejected: tableData?.filter(item => item.gptRes.status === "rejected").length,
+				interviews: tableData?.filter(item => item.gptRes.status === "interview requested").length,
+				offers: tableData?.filter(item => item.gptRes.status === "received offer").length,
+			});
+		}
 	}, [tableData]);
+
 
 	async function handleLoginClick() {
 		if (loading) return;
@@ -102,7 +118,7 @@ function App() {
 		setRefreshMsg(displayMsg);
 		setTimeout(() => {
 			setRefreshMsg("")
-		}, 3000);
+		}, 5000);
 
 		// save latest refresh click
 		if (newestMsgDate !== undefined) {
@@ -141,32 +157,40 @@ function App() {
 			)}
 
 
-			{!gptKeyValid && authenticated && !showSettings && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg}/>}
+			{!gptKeyValid && authenticated && !showSettings && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />}
 
-			{authenticated && !showSettings && (
-				<table className="maintable">
-					<thead>
-						<tr>
-							<th>Company</th>
-							<th>Position</th>
-							<th>Status</th>
-							<th>Date</th>
-						</tr>
-					</thead>
-					<tbody>
-						{tableData !== undefined &&
-							tableData instanceof Array &&
-							tableData.length > 0 &&
-							(tableData.map((item: Message) => (
-								<tr key={item.id}>
-									<td>{item.gptRes.company}</td>
-									<td>{item.gptRes.position}</td>
-									<td>{item.gptRes.status}</td>
-									<td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
-								</tr>
-							)))}
-					</tbody>
-				</table>)}
+			{authenticated && !showSettings &&
+				<div>
+					<div className="table-counts">
+						<h3>Applied: {tableCounts?.appsReceived}</h3>
+						<h3>Rejected: {tableCounts?.rejected}</h3>
+						<h3>Interviews: {tableCounts?.interviews}</h3>
+						<h3>Offers: {tableCounts?.offers}</h3>
+					</div>
+					<table className="maintable">
+						<thead>
+							<tr>
+								<th>Company</th>
+								<th>Position</th>
+								<th>Status</th>
+								<th>Date</th>
+							</tr>
+						</thead>
+						<tbody>
+							{tableData !== undefined &&
+								tableData instanceof Array &&
+								tableData.length > 0 &&
+								(tableData.map((item: Message) => (
+									<tr key={item.id}>
+										<td>{item.gptRes.company}</td>
+										<td>{item.gptRes.position}</td>
+										<td>{item.gptRes.status}</td>
+										<td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
+									</tr>
+								)))}
+						</tbody>
+					</table>
+				</div>}
 		</div>
 	);
 }
