@@ -17,6 +17,7 @@ interface TableCounts {
 	rejected: number;
 	interviews: number;
 	offers: number;
+	todayAppliedCount: number;
 }
 
 function App() {
@@ -31,8 +32,8 @@ function App() {
 	const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [tableCounts, setTableCounts] = useState<TableCounts>();
-
-
+	const [motivQuote, setMotivQuote] = useState<string | undefined>("");
+	
 	useEffect(() => {
 		console.log("starting....");
 		(async () => {
@@ -57,6 +58,7 @@ function App() {
 
 			setDateNewestMsg(await StorageManager.getLatestDate());
 			setTableData(await StorageManager.getTableData() as Message[]);
+
 		})();
 
 	}, []);
@@ -69,9 +71,19 @@ function App() {
 				rejected: tableData?.filter(item => item.gptRes.status === "rejected").length,
 				interviews: tableData?.filter(item => item.gptRes.status === "interview requested").length,
 				offers: tableData?.filter(item => item.gptRes.status === "received offer").length,
+				todayAppliedCount: tableData?.filter(item => {
+					const temp = new Date();
+					let start = new Date(temp.getFullYear(), temp.getMonth(), temp.getDate(), 0,0,0,0);
+					return (start < new Date(item.internalDate));
+				}).length,
 			});
 		}
 	}, [tableData]);
+
+	useEffect(()=>{
+		(async () => {setMotivQuote(await GptManager.getMotivQuote(gptKey))})();
+	},[gptKey]);
+
 
 
 	async function handleLoginClick() {
@@ -83,21 +95,22 @@ function App() {
 		setAuthenticated(true);
 	};
 
-
+	
 	const refresh = async () => {
 		console.log("Refreshing...");
 		console.log("authToken", authToken);
 		let gmailToken: string | undefined = authToken;
-
+		
 		if (!await GptManager.healthCheck(gptKey)) {
 			return;
 		}
-
+		setMotivQuote(await GptManager.getMotivQuote(gptKey));
+		
 		if (!await GmailApiManager.healthCheck(authToken)) {
 			gmailToken = await AuthManager.authenticate();
 			setAuthToken(gmailToken);
 		}
-
+		
 		const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey);
 
 		console.log("Messages: ", validMessages);
@@ -131,9 +144,13 @@ function App() {
 
 	return (
 		<div className="App">
+
+			
 			<h1 className="title">Job App Tracker</h1>
 
 			{authenticated && showSettings && <Settings setAuthenticated={setAuthenticated} setShowSettings={setShowSettings} />}
+
+			{authenticated && <h3>{motivQuote}</h3>}
 
 			{authenticated &&
 				<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>
@@ -161,6 +178,7 @@ function App() {
 
 			{authenticated && !showSettings &&
 				<div>
+					<h3>Applied today: {tableCounts?.todayAppliedCount}</h3>
 					<div className="table-counts">
 						<h3>Applied: {tableCounts?.appsReceived}</h3>
 						<h3>Rejected: {tableCounts?.rejected}</h3>
