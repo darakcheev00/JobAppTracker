@@ -47,9 +47,9 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 interviews: tableData?.filter(item => item.gptRes.status === "interview requested").length,
                 offers: tableData?.filter(item => item.gptRes.status === "received offer").length,
                 todayAppliedCount: tableData?.filter(item => {
-                    const temp = new Date();
-                    let start = new Date(temp.getFullYear(), temp.getMonth(), temp.getDate(), 0, 0, 0, 0);
-                    return (start < new Date(item.internalDate));
+                    const now = new Date();
+                    let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+                    return (start < new Date(item.internalDate) && item.gptRes.status === "application received");
                 }).length,
             });
         }
