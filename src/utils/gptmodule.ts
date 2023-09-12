@@ -82,8 +82,8 @@ export default class GptManager {
 
 
     static getMotivQuote = async (gptKey:string | undefined) => {
-        // const prompt = "Give me a random humorous motivational quote, not by a president or steve jobs";
-        const prompt = "compliment my [insert a bad trait of a person] in an ironic way. only write your answer. give a different response every time";
+        const prompt = "Give me a random humorous motivational quote, not by a president or steve jobs";
+        // const prompt = "compliment my [insert a bad trait of a person] in an ironic way. only write your answer. give a different response every time";
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             mode: 'cors',
