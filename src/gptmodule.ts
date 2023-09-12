@@ -82,8 +82,8 @@ export class GptManager {
 
 
     static getMotivQuote = async (gptKey:string | undefined) => {
-        // const prompt = "Give me a different humorous motivational quote";
-        const prompt = "compliment my [insert a bad trait of a person] in an ironic way. only write your answer";
+        const prompt = "Give me a random humorous motivational quote, not by a president or steve jobs";
+        // const prompt = "compliment my [insert a bad trait of a person] in an ironic way. only write your answer. give a different response every time";
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             mode: 'cors',
@@ -99,7 +99,7 @@ export class GptManager {
 
         if (response.ok) {
             const data = await response.json();
-            return data.choices[0].message.content;
+            return data.choices[Math.floor(Math.random() * data.choices.length)].message.content;
         } else {
             console.error("GPT error: could not get motivational quote");
             return "";
