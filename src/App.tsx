@@ -61,21 +61,22 @@ function App() {
 		<div className="App">
 			<h1 className="title">Job App Tracker</h1>
 
-			{!authenticated && <button id="login_btn" onClick={handleLoginClick}>
-				Log in
-			</button>}
+			{authenticated ? (
+				<div>
+					<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>
+						{!showSettings ? 'Settings' : 'Back'}
+					</button>
 
-			<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>
-				{!showSettings ? 'Settings' : 'Back'}
-			</button>
+					{showSettings ? (
+						<Settings {...{ setAuthenticated, setShowSettings }} />
+					) : (
+						<MainPage {...{ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }} />
+					)}
+				</div>
+			) : (
+				<button id="login_btn" onClick={handleLoginClick}>Log in</button>
+			)}
 
-			{authenticated &&
-				(showSettings ? (
-					<Settings {...{ setAuthenticated, setShowSettings }} />
-				) : (
-					<MainPage {...{ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }} />
-				))
-			}
 		</div>
 	);
 }
