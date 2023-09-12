@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AuthManager from './auth';
+import AuthManager from '../utils/auth';
 
 
 type Props = {

@@ -1,12 +1,12 @@
 import { UUID } from 'crypto';
-import { MessageParser } from './gmail-parse-message';
+import MessageParser from './gmail-parse-message';
 
 /**
  * Get messages from gmail api
  * @return {array} the array of messages
  */
 
-export class GmailApiManager {
+export default class GmailApiManager {
     static healthCheck = async (token: string | undefined) => {
         console.log("Gmail API healthcheck...");
         try {

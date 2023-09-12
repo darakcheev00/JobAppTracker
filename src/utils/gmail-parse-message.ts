@@ -1,7 +1,7 @@
 import { decode } from './base64';
-import { GptManager } from './gptmodule';
+import GptManager from './gptmodule';
 
-export class MessageParser {
+export default class MessageParser {
 
 
 

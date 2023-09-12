@@ -12,7 +12,7 @@ export interface Message {
     };
 }
 
-export class StorageManager {
+export default class StorageManager {
     static epochToMMDDYY = (epochTime: number) => {
         const date = new Date(epochTime);
         const month = (date.getMonth() + 1).toString().padStart(2, '0');

@@ -1,7 +1,7 @@
 import React, {useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { GptManager } from './gptmodule';
-import { StorageManager } from './chrome-storage-utils';
+import GptManager from '../utils/gptmodule';
+import StorageManager from '../utils/chrome-storage-utils';
 
 type GptSubmitForm = {
     gptkeyInput: string;
