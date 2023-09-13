@@ -125,8 +125,8 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
 
             {gptKeyValid ?
                 (
-                    <div>
-                        <button onClick={refresh} id="refresh_btn"> Refresh </button>
+                    <div className='refresh-card'>
+                        <button onClick={refresh} className="refresh_btn"> Refresh </button>
                         <h3>{refreshMsg}</h3>
                     </div>
                 ) : (
