@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import GptForm from './GptForm';
-import GptManager from '../utils/gptmodule';
-import StorageManager, { Message } from '../utils/chrome-storage-utils';
-import GmailApiManager from '../utils/gmail';
-import AuthManager from '../utils/auth';
+import GptForm from '../GptForm';
+import GptManager from '../../utils/gptmodule';
+import StorageManager, { Message } from '../../utils/chrome-storage-utils';
+import GmailApiManager from '../../utils/gmail';
+import AuthManager from '../../utils/auth';
+
+import './MainPage.scss';
 
 type MainPageProps = {
     authToken: string | undefined;
@@ -20,6 +22,16 @@ interface TableCounts {
     interviews: number;
     offers: number;
     todayAppliedCount: number;
+}
+
+const statusDict: { [key: string]: string } = {
+    "application received": "appsent",
+    "rejected": "rejected",
+    "interview requested": "interview",
+    "received offer": "offer",
+    "unspecified": "unspec",
+    "action required for job application": "actionReq",
+    "invited to apply": "actionReq"
 }
 
 export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }: MainPageProps) {
@@ -115,7 +127,7 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 (
                     <div>
                         <button onClick={refresh} id="refresh_btn"> Refresh </button>
-                        <h4>{refreshMsg}</h4>
+                        <h3>{refreshMsg}</h3>
                     </div>
                 ) : (
                     <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />
@@ -130,30 +142,37 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 <h3>Interviews: {tableCounts?.interviews}</h3>
                 <h3>Offers: {tableCounts?.offers}</h3>
             </div>
-            
-            <table className="maintable">
-                <thead>
-                    <tr>
-                        <th>Company</th>
-                        <th>Position</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tableData !== undefined &&
-                        tableData instanceof Array &&
-                        tableData.length > 0 &&
-                        (tableData.map((item: Message) => (
-                            <tr key={item.id}>
-                                <td>{item.gptRes.company}</td>
-                                <td>{item.gptRes.position}</td>
-                                <td>{item.gptRes.status}</td>
-                                <td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
-                            </tr>
-                        )))}
-                </tbody>
-            </table>
+            <div className='tableCard'>
+                <table className="maintable">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Position</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData !== undefined &&
+                            tableData instanceof Array &&
+                            tableData.length > 0 &&
+                            (tableData.map((item: Message) => (
+                                <tr key={item.id}>
+                                    <td className='company-col'>
+                                        <a href={`https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox/${item.id}`} target="_blank" rel="noopener noreferrer">
+                                            {item.gptRes.company}
+                                        </a>
+                                    </td>
+                                    <td className='position-col'>{item.gptRes.position}</td>
+                                    <td>
+                                        <p className={`status status-${statusDict[item.gptRes.status]}`}>{item.gptRes.status}</p>
+                                    </td>
+                                    <td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
+                                </tr>
+                            )))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     )
 }

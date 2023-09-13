@@ -6,7 +6,7 @@ import GptManager from './utils/gptmodule';
 import StorageManager from './utils/chrome-storage-utils';
 
 import Settings from './components/Settings';
-import MainPage from './components/MainPage';
+import MainPage from './components/MainPage/MainPage';
 
 import './App.css';
 
@@ -60,7 +60,6 @@ function App() {
 	return (
 		<div className="App">
 			<h1 className="title">Job App Tracker</h1>
-
 			{authenticated ? (
 				<div>
 					<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>

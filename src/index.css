@@ -1,5 +1,6 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  font-family: Mukta, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -12,19 +13,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale; */
-  display: flex;
-  place-items: center;
-  min-width: 500px;
-  min-height: 100vh;
 }
 
 code {
@@ -40,7 +28,7 @@ h1 {
 h3 {
   font-family: inherit;
   padding: 0.6em 1.2em;
-  font-size: 1em;
+  font-size: 1.2em;
   font-weight: 500;
   margin: 5px;
   display: inline-block;
@@ -51,7 +39,7 @@ button,input {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
-  font-size: 1em;
+  font-size: 1.2em;
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;

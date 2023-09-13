@@ -54,8 +54,9 @@ export default class GmailApiManager {
                 console.log("GMAIL API: no new messages");
                 return {};
             }
-
+            
             console.log(`GMAIL API: ${info.messages.length} new messages`);
+            
 
             // get date of newest message
             const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${info.messages[0].id}`, {
@@ -66,6 +67,7 @@ export default class GmailApiManager {
             });
             const newestMessage = await res.json();
             const updatedNewestMsgDate = parseInt(newestMessage.internalDate);
+            console.log(newestMessage);
 
             // call gpt on selected messages async
             const messagePromises = info.messages.map(async (msg: any) => {
