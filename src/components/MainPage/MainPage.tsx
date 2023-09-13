@@ -34,6 +34,16 @@ const statusDict: { [key: string]: string } = {
     "invited to apply": "actionReq"
 }
 
+const statusDisplayNames: { [key: string]: string } = {
+    "application received": "Applied",
+    "rejected": "Rejected",
+    "interview requested": "Interview",
+    "received offer": "Offer",
+    "unspecified": "Unspecified",
+    "action required for job application": "Action required",
+    "invited to apply": "Invited to apply"
+}
+
 export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
@@ -146,10 +156,10 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 <table className="maintable">
                     <thead>
                         <tr>
-                            <th>Company</th>
-                            <th>Position</th>
-                            <th>Status</th>
-                            <th>Date</th>
+                            <th className='company-col-head'>Company</th>
+                            <th className='position-col-head'>Position</th>
+                            <th className='status-col'>Status</th>
+                            <th className='date-col'>Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -164,10 +174,10 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                                         </a>
                                     </td>
                                     <td className='position-col'>{item.gptRes.position}</td>
-                                    <td>
-                                        <p className={`status status-${statusDict[item.gptRes.status]}`}>{item.gptRes.status}</p>
+                                    <td className='status-col'>
+                                        <p className={`status status-${statusDict[item.gptRes.status]}`}>{statusDisplayNames[item.gptRes.status]}</p>
                                     </td>
-                                    <td>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
+                                    <td className='date-col'>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
                                 </tr>
                             )))}
                     </tbody>

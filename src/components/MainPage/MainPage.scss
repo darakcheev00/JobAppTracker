@@ -49,7 +49,7 @@ table {
   border-collapse: collapse;
   box-shadow: 0 5px 10px $clr-gray300;
   background-color: white;
-  
+
   max-width: 100%;
   // overflow: hidden;
 
@@ -58,7 +58,7 @@ table {
   }
 
   th {
-    padding: 1rem 2rem;
+    padding: 1rem 1rem;
     text-transform: uppercase;
     letter-spacing: 0.1rem;
     font-size: 0.7rem;
@@ -66,12 +66,27 @@ table {
   }
 
   td {
-    padding: 1rem 2rem;
+    padding: 0.4rem 1rem;
     white-space: wrap;
   }
 
-  .company-col, .position-col{
-      text-align: left;
+  .company-col,
+  .position-col {
+    text-align: left;
+  }
+
+  .company-col,
+  .company-col-head {
+    padding-left: 2rem;
+  }
+
+  .position-col,
+  .position-col-head {
+    min-width: 250px;
+  }
+
+  .date-col{
+    padding-right: 2rem;
   }
 
   a {
@@ -83,8 +98,8 @@ table {
     border-radius: $radius;
     background-color: red;
     padding: 0.2rem 1rem;
-    text-align: center; 
-    text-transform:capitalize;
+    text-align: center;
+    text-transform: capitalize;
 
     &-appsent {
       background-color: $clr-appsent;
@@ -105,7 +120,7 @@ table {
       background-color: $clr-interview;
       color: $clr-interview-font;
     }
-    
+
     &-offer {
       background-color: $clr-offer;
       color: $clr-offer-font;
@@ -132,9 +147,11 @@ table {
   text-align: center;
 }
 
-.refresh-card{
+.refresh-card {
   display: flex;
-  flex-direction: column; /* Stack elements vertically */
-  align-items: center; /* Center elements horizontally */
+  flex-direction: column;
+  /* Stack elements vertically */
+  align-items: center;
+  /* Center elements horizontally */
   gap: 10px;
 }
