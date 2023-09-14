@@ -68,7 +68,6 @@ function App() {
 		setAuthenticated(true);
 	};
 
-
 	return (
 		<div className="App">
 			<h1 className="title">Trackify</h1>

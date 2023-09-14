@@ -32,7 +32,7 @@ export default class StorageManager {
         const data = await chrome.storage.local.get('tableData');
         const tableData = data.tableData;
         console.log("   Retrieved apps from chrome storage. Count: ", tableData !== undefined ? tableData.length : 0);
-        console.log(tableData);
+        // console.log(tableData);
         return tableData;
     }
 

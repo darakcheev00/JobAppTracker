@@ -74,8 +74,8 @@ export default function Settings({ setAuthenticated,
             </div>
 
             <div className='settings-row'>
-                <h3>Reload today's messages: </h3>
-                <button onClick={reloadToday}>Reload</button>
+                <h3>Clear today's messages: </h3>
+                <button onClick={reloadToday}>Clear</button>
             </div>
 
             <form onSubmit={handleSubmit(handleSubmitInvalids)}>
