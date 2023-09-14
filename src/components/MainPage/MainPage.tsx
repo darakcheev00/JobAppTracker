@@ -6,6 +6,7 @@ import GmailApiManager from '../../utils/gmail';
 import AuthManager from '../../utils/auth';
 
 import './MainPage.scss';
+import { serialize } from 'v8';
 
 type MainPageProps = {
     authToken: string | undefined;
@@ -49,14 +50,17 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [motivQuote, setMotivQuote] = useState<string | undefined>("");
     const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
+    const [filteredTableData, setFilteredTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
     const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
-
+    const [searchTerm, setSearchTerm] = useState<string | undefined>("");
 
     useEffect(() => {
         (async () => {
             setDateNewestMsg(await StorageManager.getLatestDate());
-            setTableData(await StorageManager.getTableData() as Message[]);
+            const data = await StorageManager.getTableData() as Message[];
+            setTableData(data);
+            setFilteredTableData(data);
         })();
     }, []);
 
@@ -128,23 +132,29 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
 
     }
 
+    const handleSearch = (val: any) => {
+        setSearchTerm(val.target.value);
+    }
+
+    useEffect(() => {
+        console.log(searchTerm);
+        if (searchTerm !== undefined && searchTerm !== "") {
+            setFilteredTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1));
+        } else {
+            setFilteredTableData(tableData);
+        }
+
+    }, [searchTerm]);
+
+
 
     return (
         <div>
             <h3>{motivQuote}</h3>
 
-            {gptKeyValid ?
-                (
-                    <div className='refresh-card'>
-                        <button onClick={refresh} className="refresh_btn"> Refresh </button>
-                        <h3>{refreshMsg}</h3>
-                    </div>
-                ) : (
-                    <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />
-                )
-            }
+            {!gptKeyValid && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />}
 
-            <h3>Applied today: {tableCounts?.todayAppliedCount}</h3>
+            <h3>{refreshMsg}</h3>
 
             <div className="table-counts">
                 <h3>Applied: {tableCounts?.appsReceived}</h3>
@@ -152,6 +162,22 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 <h3>Interviews: {tableCounts?.interviews}</h3>
                 <h3>Offers: {tableCounts?.offers}</h3>
             </div>
+
+            <div>
+                <input
+                    id='searchbox'
+                    type="text"
+                    placeholder="Search company..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                />
+
+                <h3>Applied today: {tableCounts?.todayAppliedCount}</h3>
+
+                {gptKeyValid && <button onClick={refresh} className="refresh_btn"> Refresh </button>}
+            </div>
+
+
             <div className='tableCard'>
                 <table className="maintable">
                     <thead>
@@ -163,10 +189,9 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                         </tr>
                     </thead>
                     <tbody>
-                        {tableData !== undefined &&
-                            tableData instanceof Array &&
-                            tableData.length > 0 &&
-                            (tableData.map((item: Message) => (
+                        {filteredTableData !== undefined &&
+                            filteredTableData.length > 0 &&
+                            (filteredTableData.map((item: Message) => (
                                 <tr key={item.id}>
                                     <td className='company-col'>
                                         <a href={`https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox/${item.id}`} target="_blank" rel="noopener noreferrer">
