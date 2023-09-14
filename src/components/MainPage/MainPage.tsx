@@ -172,6 +172,12 @@ export default function MainPage({ authToken,
     const filterRejected = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected"))}
     const filterInterviews = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested"))}
     const filterOffers = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer"))}
+    const filterOther = () => {setDisplayedTableData(tableData?.filter(item => {
+        return item.gptRes.status !== "application received" &&
+                item.gptRes.status !== "rejected" && 
+                item.gptRes.status !== "interview requested" && 
+                item.gptRes.status !== "received offer"
+    }))}
 
     return (
         <div>
@@ -180,11 +186,16 @@ export default function MainPage({ authToken,
             {!gptKeyValid && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />}
 
             <div className="table-counts">
-                <button onClick={filterAll}>All: {tableData?.length}</button>
+                <button onClick={filterAll}>All</button>
                 <button onClick={filterApplied} id="applied-btn">Applied: {tableCounts?.appsReceived}</button>
                 <button onClick={filterRejected} id="rejected-btn">Rejected: {tableCounts?.rejected}</button>
                 <button onClick={filterInterviews} id="interviews-btn">Interviews: {tableCounts?.interviews}</button>
                 <button onClick={filterOffers} id="offers-btn">Offers: {tableCounts?.offers}</button>
+                <button onClick={filterOther} id="other-btn">Other: {
+                    tableData && tableCounts ?
+                        tableData?.length - tableCounts?.appsReceived - tableCounts?.rejected - tableCounts?.interviews - tableCounts?.offers
+                        : 0
+                }</button>
             </div>
 
             <div className='group2'>

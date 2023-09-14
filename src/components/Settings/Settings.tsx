@@ -69,7 +69,7 @@ export default function Settings({ setAuthenticated,
             <div className='settings-row'>
                 <h3>Motivational quote: </h3>
                 <button onClick={toggleQuoteGen}>
-                    {showMotivQuote ? "Turned on" : "Turned off"}
+                    {showMotivQuote ? "Turned on ⚠️💲" : "Turned off"}
                 </button>
             </div>
 

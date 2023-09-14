@@ -22,6 +22,8 @@ $clr-offer: #dcc8e6;
 $clr-offer-font: #7b3b9b;
 $clr-unspec: #c0c0c0;
 $clr-unspec-font: #000000;
+$clr-other: #9ddaf7;
+$clr-other-font: #005780;
 $clr-link: #2962ff;
 
 /*   border radius */
@@ -58,12 +60,19 @@ $radius: 0.2rem;
   color: $clr-offer-font;
 }
 
+#other-btn {
+  // color: $clr-offer;
+  background-color: $clr-other;
+  color: $clr-other-font;
+}
+
 .group2 {
   display: flex;
   align-items: left;
 }
 
 .tableCard {
+  border-radius: 12px;
   font-family: Mukta, sans-serif;
   display: flex;
   justify-content: center;
@@ -75,6 +84,7 @@ $radius: 0.2rem;
 }
 
 table {
+  border-radius: 12px;
   border-collapse: collapse;
   box-shadow: 0 5px 10px $clr-gray300;
   background-color: white;
@@ -83,6 +93,7 @@ table {
   // overflow: hidden;
 
   thead {
+    border-radius: 12px;
     box-shadow: 0 5px 10px $clr-gray300;
   }
 
