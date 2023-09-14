@@ -3,8 +3,6 @@ import GptManager from './gptmodule';
 
 export default class MessageParser {
 
-
-
 	/**
 	 * Decodes a url safe Base64 string to its original representation.
 	 * @param  {string} string
@@ -63,7 +61,7 @@ export default class MessageParser {
 	 * @param  {object} response
 	 * @return {object}
 	 */
-	static parseMessage = async (response: any, gptKey: string | undefined) => {
+	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders:string[]) => {
 		var messageObj = {
 			id: response.id,
 			snippet: response.snippet,
@@ -92,7 +90,7 @@ export default class MessageParser {
 		if (headers.from) {
 			messageObj.sender = headers.from;
 			// return invalid reduced_message if sender is invalid
-			for (const invalid of this.invalid_senders) {
+			for (const invalid of invalid_senders) {
 				if (messageObj.sender.indexOf(invalid) !== -1) {
 					messageObj.sender = "Error: Invalid Sender";
 					return messageObj;

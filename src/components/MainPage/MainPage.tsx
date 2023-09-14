@@ -16,6 +16,11 @@ type MainPageProps = {
     gptKeyValid: boolean | undefined;
     setGptKeyValid: (key: boolean) => void;
     showMotivQuote: boolean;
+    invalidEmails: string[];
+    tableData: Message[] | undefined;
+    setTableData: (key: Message[] | undefined) => void;
+    dateNewestMsg: number;
+    setDateNewestMsg: (key: number) => void;
 };
 
 interface TableCounts {
@@ -46,14 +51,23 @@ const statusDisplayNames: { [key: string]: string } = {
     "invited to apply": "Invited to apply"
 }
 
-export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid, showMotivQuote }: MainPageProps) {
+export default function MainPage({ authToken, 
+                                    setAuthToken, 
+                                    gptKey, 
+                                    setGptKey, 
+                                    gptKeyValid, 
+                                    setGptKeyValid, 
+                                    showMotivQuote, 
+                                    invalidEmails,
+                                    tableData,
+                                    setTableData,
+                                    dateNewestMsg,
+                                    setDateNewestMsg}: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [motivQuote, setMotivQuote] = useState<string | undefined>("");
-    const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
     const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
-    const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
     const [searchTerm, setSearchTerm] = useState<string | undefined>("");
 
     useEffect(() => {
@@ -110,7 +124,7 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
             setAuthToken(gmailToken);
         }
 
-        const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey);
+        const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
 
         console.log("Messages: ", validMessages);
 
@@ -138,7 +152,6 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
             setDateNewestMsg(newestMsgDate + offSet);
             StorageManager.saveNewestMsgDate(newestMsgDate + offSet);
         }
-
     }
 
     const handleSearch = (val: any) => {

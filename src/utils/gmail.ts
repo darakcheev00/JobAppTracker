@@ -32,7 +32,7 @@ export default class GmailApiManager {
         }
     }
 
-    static getMessages = async (token: string | undefined, newestMsgDate: number, gptKey: string | undefined) => {
+    static getMessages = async (token: string | undefined, newestMsgDate: number, gptKey: string | undefined, invalid_senders:string[]) => {
         console.log(`query: in:inbox category:primary after:${new Date(newestMsgDate)}`)
         const query = `in:inbox category:primary after:${newestMsgDate / 1000}`;
         // const query = `in:inbox category:primary after:${1694063429}`;
@@ -80,7 +80,7 @@ export default class GmailApiManager {
                 const full_message = await res.json();
                 // console.log(full_message);
 
-                const reduced_message = await MessageParser.parseMessage(full_message, gptKey);
+                const reduced_message = await MessageParser.parseMessage(full_message, gptKey, invalid_senders);
 
                 return reduced_message;
             });

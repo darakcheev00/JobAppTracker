@@ -3,10 +3,11 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import AuthManager from './utils/auth';
 import GptManager from './utils/gptmodule';
-import StorageManager from './utils/chrome-storage-utils';
+import StorageManager, {Message} from './utils/chrome-storage-utils';
 
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
+
 
 import './App.css';
 
@@ -22,6 +23,11 @@ function App() {
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [showMotivQuote, setShowMotivQuote] = useState<boolean>(false);
 
+	const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
+
+	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
+    const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
+
 	useEffect(() => {
 		console.log("starting....");
 		(async () => {
@@ -33,6 +39,8 @@ function App() {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
 			}
+
+			setInvalidEmails(await StorageManager.getInvalidEmails());
 
 			// await StorageManager.clearTableData();
 			// await StorageManager.resetLatestDate();
@@ -47,6 +55,9 @@ function App() {
 
 	}, []);
 
+	useEffect(() => { 
+		console.log(invalidEmails);
+	},[invalidEmails]);
 
 	async function handleLoginClick() {
 		if (loading) return;
@@ -68,9 +79,29 @@ function App() {
 					</button>
 
 					{showSettings ? (
-						<Settings {...{ setAuthenticated, setShowSettings, setShowMotivQuote, showMotivQuote}} />
+						<Settings {...{ setAuthenticated, 
+										setShowSettings, 
+										setShowMotivQuote, 
+										showMotivQuote, 
+										invalidEmails, 
+										setInvalidEmails,
+										setTableData,
+										setDateNewestMsg
+									}} />
 					) : (
-						<MainPage {...{ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid, showMotivQuote}} />
+						<MainPage {...{ authToken, 
+										setAuthToken, 
+										gptKey, 
+										setGptKey, 
+										gptKeyValid, 
+										setGptKeyValid, 
+										showMotivQuote, 
+										invalidEmails, 
+										tableData,
+										setTableData,
+										dateNewestMsg, 
+										setDateNewestMsg
+									}} />
 					)}
 				</div>
 			) : (

@@ -120,4 +120,19 @@ export default class StorageManager {
         });
     };
 
+    static getInvalidEmails = async () => {
+        const data = await chrome.storage.local.get('invalidEmails');
+        console.log(`Retrieved invalid emails from chrome storage.`);
+        if (data.invalidEmails === undefined){
+            return [];
+        }
+        return data.invalidEmails;
+    }
+
+    static setInvalidEmails = async (list: string[]) => {
+        await chrome.storage.local.set({ invalidEmails: list}, () => {
+            console.log(`Invalid emails set.`);
+        });
+    }
+
 }
