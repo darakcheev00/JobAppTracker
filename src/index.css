@@ -3,8 +3,9 @@
   font-family: Mukta, sans-serif;
   line-height: 1.5;
   font-weight: 400;  
-  max-width: 800px;
-  max-height: 600px;
+  min-width: 780px;
+  max-width: 780px;
+  min-height: 600px;
 
 
   color-scheme: light dark;

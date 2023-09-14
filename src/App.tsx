@@ -5,7 +5,7 @@ import AuthManager from './utils/auth';
 import GptManager from './utils/gptmodule';
 import StorageManager from './utils/chrome-storage-utils';
 
-import Settings from './components/Settings';
+import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
 
 import './App.css';
@@ -20,6 +20,7 @@ function App() {
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
+	const [showMotivQuote, setShowMotivQuote] = useState<boolean>(false);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -67,9 +68,9 @@ function App() {
 					</button>
 
 					{showSettings ? (
-						<Settings {...{ setAuthenticated, setShowSettings }} />
+						<Settings {...{ setAuthenticated, setShowSettings, setShowMotivQuote, showMotivQuote}} />
 					) : (
-						<MainPage {...{ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }} />
+						<MainPage {...{ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid, showMotivQuote}} />
 					)}
 				</div>
 			) : (

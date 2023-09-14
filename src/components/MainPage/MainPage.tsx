@@ -15,6 +15,7 @@ type MainPageProps = {
     setGptKey: (key: string) => void;
     gptKeyValid: boolean | undefined;
     setGptKeyValid: (key: boolean) => void;
+    showMotivQuote: boolean;
 };
 
 interface TableCounts {
@@ -45,22 +46,25 @@ const statusDisplayNames: { [key: string]: string } = {
     "invited to apply": "Invited to apply"
 }
 
-export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid }: MainPageProps) {
+export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, gptKeyValid, setGptKeyValid, showMotivQuote }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [motivQuote, setMotivQuote] = useState<string | undefined>("");
     const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
-    const [filteredTableData, setFilteredTableData] = useState<Message[] | undefined>(undefined);
+    const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
     const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
     const [searchTerm, setSearchTerm] = useState<string | undefined>("");
 
     useEffect(() => {
         (async () => {
+            // const {newTableData, newLatestDate} = await StorageManager.rollBackToMidnight();
             setDateNewestMsg(await StorageManager.getLatestDate());
+            // setDateNewestMsg(newLatestDate);
             const data = await StorageManager.getTableData() as Message[];
+            console.log(data);
             setTableData(data);
-            setFilteredTableData(data);
+            setDisplayedTableData(data);
         })();
     }, []);
 
@@ -79,11 +83,13 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 }).length,
             });
         }
+        setDisplayedTableData(tableData);
     }, [tableData]);
 
-
     useEffect(() => {
-        (async () => { setMotivQuote(await GptManager.getMotivQuote(gptKey)) })();
+        if (showMotivQuote) {
+            (async () => { setMotivQuote(await GptManager.getMotivQuote(gptKey)) })();
+        }
     }, [gptKey]);
 
     const refresh = async () => {
@@ -94,7 +100,10 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
         if (!await GptManager.healthCheck(gptKey)) {
             return;
         }
-        setMotivQuote(await GptManager.getMotivQuote(gptKey));
+
+        if (showMotivQuote) {
+            setMotivQuote(await GptManager.getMotivQuote(gptKey));
+        }
 
         if (!await GmailApiManager.healthCheck(authToken)) {
             gmailToken = await AuthManager.authenticate();
@@ -139,31 +148,33 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
     useEffect(() => {
         console.log(searchTerm);
         if (searchTerm !== undefined && searchTerm !== "") {
-            setFilteredTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1));
+            setDisplayedTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1));
         } else {
-            setFilteredTableData(tableData);
+            setDisplayedTableData(tableData);
         }
-
     }, [searchTerm]);
 
-
+    const filterAll = () => {setDisplayedTableData(tableData)};
+    const filterApplied = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received"))}
+    const filterRejected = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected"))}
+    const filterInterviews = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested"))}
+    const filterOffers = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer"))}
 
     return (
         <div>
-            <h3>{motivQuote}</h3>
+            {showMotivQuote && <h3>{motivQuote}</h3>}
 
             {!gptKeyValid && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />}
 
-            <h3>{refreshMsg}</h3>
-
             <div className="table-counts">
-                <h3>Applied: {tableCounts?.appsReceived}</h3>
-                <h3>Rejected: {tableCounts?.rejected}</h3>
-                <h3>Interviews: {tableCounts?.interviews}</h3>
-                <h3>Offers: {tableCounts?.offers}</h3>
+                <button onClick={filterAll}>All: {tableData?.length}</button>
+                <button onClick={filterApplied} id="applied-btn">Applied: {tableCounts?.appsReceived}</button>
+                <button onClick={filterRejected} id="rejected-btn">Rejected: {tableCounts?.rejected}</button>
+                <button onClick={filterInterviews} id="interviews-btn">Interviews: {tableCounts?.interviews}</button>
+                <button onClick={filterOffers} id="offers-btn">Offers: {tableCounts?.offers}</button>
             </div>
 
-            <div>
+            <div className='group2'>
                 <input
                     id='searchbox'
                     type="text"
@@ -175,6 +186,7 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                 <h3>Applied today: {tableCounts?.todayAppliedCount}</h3>
 
                 {gptKeyValid && <button onClick={refresh} className="refresh_btn"> Refresh </button>}
+                <h3 id='refresh-msg'>{refreshMsg}</h3>
             </div>
 
 
@@ -189,9 +201,9 @@ export default function MainPage({ authToken, setAuthToken, gptKey, setGptKey, g
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredTableData !== undefined &&
-                            filteredTableData.length > 0 &&
-                            (filteredTableData.map((item: Message) => (
+                        {displayedTableData !== undefined &&
+                            displayedTableData.length > 0 &&
+                            (displayedTableData.map((item: Message) => (
                                 <tr key={item.id}>
                                     <td className='company-col'>
                                         <a href={`https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox/${item.id}`} target="_blank" rel="noopener noreferrer">

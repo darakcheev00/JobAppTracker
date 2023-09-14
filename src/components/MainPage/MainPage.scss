@@ -34,6 +34,34 @@ $radius: 0.2rem;
   padding: 0;
 }
 
+#applied-btn {
+  // color: $clr-appsent;
+  background-color: $clr-appsent;
+  color: $clr-appsent-font;
+}
+
+#rejected-btn {
+  // color: $clr-rejected;
+  background-color: $clr-rejected;
+  color: $clr-rejected-font;
+}
+
+#interviews-btn {
+  // color: $clr-interview;
+  background-color: $clr-interview;
+  color: $clr-interview-font;
+}
+
+#offers-btn {
+  // color: $clr-offer;
+  background-color: $clr-offer;
+  color: $clr-offer-font;
+}
+
+.group2 {
+  display: flex;
+  align-items: left;
+}
 
 .tableCard {
   font-family: Mukta, sans-serif;
@@ -79,15 +107,21 @@ table {
   .company-col,
   .company-col-head {
     padding-left: 2rem;
+    width: 175px;
   }
 
   .position-col,
   .position-col-head {
-    min-width: 250px;
+    width: 280px;
   }
 
-  .date-col{
+  .status-col {
+    width: 145px;
+  }
+
+  .date-col {
     padding-right: 2rem;
+    width: 100px;
   }
 
   a {
@@ -146,13 +180,4 @@ table {
 
 .table-counts {
   text-align: center;
-}
-
-.refresh-card {
-  display: flex;
-  flex-direction: column;
-  /* Stack elements vertically */
-  align-items: center;
-  /* Center elements horizontally */
-  gap: 10px;
 }

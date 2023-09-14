@@ -1,5 +1,6 @@
 import { table } from "console";
 
+
 export interface Message {
     id: number;
     sender: string;
@@ -55,6 +56,26 @@ export default class StorageManager {
             console.log("No new messages to be saved.");
         }
     };
+
+    static overrideTableData = async (newData: Message[]) => {
+        await chrome.storage.local.set({ tableData: newData }, () => {
+            console.log(`Override table data complete. new:${newData.length}`);
+        });
+    }
+
+    static rollBackToMidnight = async () => {
+        const now = new Date();
+        const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        let tableData = await this.getTableData();
+        tableData = tableData.filter((item:Message) => new Date(item.internalDate) < dayStart)
+        await this.overrideTableData(tableData);
+        await this.saveNewestMsgDate(dayStart.valueOf());
+        return {
+            newTableData: tableData,
+            newLatestDate: dayStart.valueOf()
+        }
+    }
+
 
     static getLatestDate = async () => {
         const data = await chrome.storage.local.get('latestDate');
