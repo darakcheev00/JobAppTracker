@@ -133,7 +133,7 @@ export default function MainPage({ authToken,
 
         if (invalidSendersList) {
             let newSet = invalidEmails;
-            for (const item of invalidSendersList){
+            for (const item of invalidSendersList) {
                 newSet.add(item);
             }
             // console.log(`invalidSendersSet: ${invalidSendersList}`)
@@ -193,6 +193,19 @@ export default function MainPage({ authToken,
                 item.gptRes.status !== "received offer"
         }))
     }
+
+    const handleDelete = async(rowId: number) => {
+        // Filter out the row to be deleted based on its unique identifier
+        const updatedTableData = displayedTableData?.filter(item => item.id !== rowId);
+        setDisplayedTableData(updatedTableData);
+        setTableData(updatedTableData);
+        
+        if (updatedTableData){
+            await StorageManager.overrideTableData(updatedTableData);
+        }else{
+            await StorageManager.overrideTableData([]);
+        }
+    };
 
     return (
         <div>
@@ -254,6 +267,9 @@ export default function MainPage({ authToken,
                                         <p className={`status status-${statusDict[item.gptRes.status]}`}>{statusDisplayNames[item.gptRes.status]}</p>
                                     </td>
                                     <td className='date-col'>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
+                                    <td className='delete-col'>
+                                        <button id='delete-button' onClick={() => handleDelete(item.id)}>✖️</button>
+                                    </td>
                                 </tr>
                             )))}
                     </tbody>
