@@ -40,6 +40,7 @@ export default function GptForm({ setGptKey, setGptKeyValid, setRefreshMsg}: Gpt
     return (
         <div>
             <form onSubmit={handleSubmit(handleGptKeySubmit)}>
+                <h3>⚠️Open AI key required!⚠️</h3>
 				<input
 					type="text"
 					placeholder='Enter OpenAI key...'

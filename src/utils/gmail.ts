@@ -85,14 +85,14 @@ export default class GmailApiManager {
             });
 
             const reduced_messages = await Promise.all(messagePromises);
-            console.log("async promises completed.");
+            console.log(`async promises completed. reduced messages: ${reduced_messages}`);
 
 
 
             let invalidSendersList: Set<string> = new Set<string>();
             for (const item of reduced_messages){
                 if (item.gptRes && item.sender !== "Error: Invalid Sender" && item.gptRes.status.toLowerCase() === "not related to job application"){
-                    invalidSendersList.add(item.sender.slice(item.sender.indexOf("<"),item.sender.length+1));
+                    invalidSendersList.add(item.sender.slice(item.sender.indexOf("<")+1,item.sender.indexOf(">")));
                 }
             }
 

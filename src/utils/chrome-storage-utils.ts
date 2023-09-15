@@ -31,7 +31,7 @@ export default class StorageManager {
     static getTableData = async () => {
         const data = await chrome.storage.local.get('tableData');
         const tableData = data.tableData;
-        console.log("   Retrieved apps from chrome storage. Count: ", tableData !== undefined ? tableData.length : 0);
+        console.log("   Retrieved rows from chrome storage. Count: ", tableData !== undefined ? tableData.length : 0);
         // console.log(tableData);
         return tableData;
     }
@@ -67,8 +67,12 @@ export default class StorageManager {
         const now = new Date();
         const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         let tableData = await this.getTableData();
-        tableData = tableData.filter((item:Message) => new Date(item.internalDate) < dayStart)
-        await this.overrideTableData(tableData);
+        if (tableData){
+            tableData = tableData.filter((item:Message) => new Date(item.internalDate) < dayStart)
+            await this.overrideTableData(tableData);
+        }else{
+            tableData = [];
+        }
         await this.saveNewestMsgDate(dayStart.valueOf());
         return {
             newTableData: tableData,
@@ -122,10 +126,11 @@ export default class StorageManager {
 
     static getInvalidEmails = async () => {
         const data = await chrome.storage.local.get('invalidEmails');
-        console.log(`Retrieved invalid emails from chrome storage. ${data.invalidEmails}`);
-        if (data.invalidEmails === undefined){
+        if (data.invalidEmails === undefined || data.invalidEmails.length === 0 || !Array.isArray(data.invalidEmails)){
+            console.log("No invalid emails in chrome storage.");
             return new Set<string>();
         }
+        console.log(`Retrieved invalid emails from chrome storage: [${data.invalidEmails}]`);
         return new Set<string>(data.invalidEmails);
     }
 
@@ -133,7 +138,12 @@ export default class StorageManager {
         await chrome.storage.local.set({ invalidEmails: Array.from(newSet)}, () => {
             console.log(`Invalid emails set.`);
         });
-        this.getInvalidEmails();
+    }
+
+    static clearInvalidEmails = async () => {
+        await chrome.storage.local.set({ invalidEmails: []}, () => {
+            console.log(`Invalid emails cleared.`);
+        });
     }
 
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import AuthManager from '../../utils/auth';
-import StorageManager, {Message} from '../../utils/chrome-storage-utils';
+import StorageManager, { Message } from '../../utils/chrome-storage-utils';
 
 type InvalidEmailsSubmitForm = {
     invalidList: string;
@@ -18,15 +18,15 @@ type Props = {
     setDateNewestMsg: (key: number) => void;
 };
 
-export default function Settings({ setAuthenticated, 
-                                    setShowSettings, 
-                                    setShowMotivQuote, 
-                                    showMotivQuote, 
-                                    invalidEmails, 
-                                    setInvalidEmails,
-                                    setTableData,
-                                    setDateNewestMsg
-                                 }: Props) {
+export default function Settings({ setAuthenticated,
+    setShowSettings,
+    setShowMotivQuote,
+    showMotivQuote,
+    invalidEmails,
+    setInvalidEmails,
+    setTableData,
+    setDateNewestMsg
+}: Props) {
 
     const [textareaValue, setTextareaValue] = useState(Array.from(invalidEmails).join('\n')); // Initialize with existing emails
 
@@ -58,7 +58,7 @@ export default function Settings({ setAuthenticated,
 
         setInvalidEmails(stringSet);
         setTextareaValue(Array.from(stringSet).join('\n'));
-        
+
         await StorageManager.setInvalidEmails(stringSet);
     }
 
@@ -66,10 +66,14 @@ export default function Settings({ setAuthenticated,
         setTextareaValue(event.target.value);
     };
 
+    const handleClearEmails = async () => {
+        await StorageManager.clearInvalidEmails();
+        setInvalidEmails(new Set<string>());
+        setTextareaValue("");
+    }
 
     return (
         <div className='settings-card'>
-            <h2>Settings</h2>
             <div className='settings-row'>
                 <h3>Motivational quote ⚠️💲: </h3>
                 <button onClick={toggleQuoteGen}>
@@ -83,16 +87,19 @@ export default function Settings({ setAuthenticated,
             </div>
 
             <form onSubmit={handleSubmit(handleSubmitInvalids)}>
-                <p>Enter the snippets of email addresses that are unrelated to job applications. Emails containing these snippets will be automatically skipped. This saves your OpenAI api cash!</p>
+                <h4>Enter the snippets of email addresses that are unrelated to job applications. Emails containing these snippets will be automatically skipped. This saves your OpenAI api cash!</h4>
                 <textarea
                     id="invalidEmailsBox"
                     placeholder='Enter invalid snippets (one per line)'
                     rows={10}
-                    cols={30}
+                    cols={50}
                     value={textareaValue}
                     onChange={handleTextareaChange}
                 />
-                <button type="submit">Submit</button>
+                <div>
+                    <button type="submit">Submit</button>
+                    <button onClick={handleClearEmails}>Clear email list</button>
+                </div>
             </form>
 
             <button id="logout_btn" onClick={handleLogoutClick}>

@@ -111,7 +111,7 @@ export default function MainPage({ authToken,
 
     const refresh = async () => {
         console.log("Refreshing...");
-        console.log("authToken", authToken);
+        // console.log("authToken", authToken);
         let gmailToken: string | undefined = authToken;
 
         if (!await GptManager.healthCheck(gptKey)) {
@@ -132,13 +132,14 @@ export default function MainPage({ authToken,
         console.log("Messages: ", validMessages);
 
         if (invalidSendersList) {
-            let newSet = invalidEmails;
-            for (const item of invalidSendersList) {
-                newSet.add(item);
-            }
+            // let newSet = invalidEmails;
+            // for (const item of invalidSendersList) {
+            //     newSet.add(item);
+            // }
+            const newSet = new Set([...invalidEmails,...invalidSendersList]);
             // console.log(`invalidSendersSet: ${invalidSendersList}`)
             setInvalidEmails(newSet);
-            StorageManager.setInvalidEmails(newSet);
+            await StorageManager.setInvalidEmails(newSet);
         }
 
         // append to existing messages
@@ -152,6 +153,8 @@ export default function MainPage({ authToken,
             // persist new mail
             await StorageManager.saveTableData(validMessages as Message[]);
             displayMsg = `${validMessages.length} new emails added!`;
+        }else{
+            
         }
 
         setRefreshMsg(displayMsg);

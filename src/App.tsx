@@ -45,7 +45,6 @@ function App() {
 			// await StorageManager.resetLatestDate();
 
 			const savedGptKey = await StorageManager.getGptKey();
-			console.log(`saved gpt key: ${savedGptKey}`)
 			setGptKeyValid(await GptManager.healthCheck(savedGptKey));
 			if (savedGptKey !== undefined) {
 				setGptKey(savedGptKey);

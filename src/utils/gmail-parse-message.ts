@@ -53,7 +53,7 @@ export default class MessageParser {
 
 	static invalid_senders = ['linkedin.com', '@remotemore.com', '@eg.vrbo.com', '@send.grammarly.com', '@mailtrack.io',
 		'@weworkremotely.com', 'getpocket_com,', 'spotangels', 'silkandsnow.com', '@github.com',
-		'order.eventbrite.com', 'invitetoapply@indeed.com', '@vailresortsmail.com', '@bowldigest.com','@levels.fy'];
+		'order.eventbrite.com', 'invitetoapply@indeed.com', '@vailresortsmail.com', '@bowldigest.com', '@levels.fy'];
 
 	/**
 	 * Takes a response from the Gmail API's GET message method and extracts all
@@ -61,7 +61,7 @@ export default class MessageParser {
 	 * @param  {object} response
 	 * @return {object}
 	 */
-	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders:Set<string>) => {
+	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders: Set<string>) => {
 		var messageObj = {
 			id: response.id,
 			snippet: response.snippet,
@@ -89,11 +89,16 @@ export default class MessageParser {
 
 		if (headers.from) {
 			messageObj.sender = headers.from;
-			// return invalid reduced_message if sender is invalid
-			for (const invalid of invalid_senders) {
-				if (messageObj.sender.indexOf(invalid) !== -1) {
-					messageObj.sender = "Error: Invalid Sender";
-					return messageObj;
+
+			// console.log(`Invalid senders size: ${invalid_senders.size}`);
+			// console.log(invalid_senders);
+			if (invalid_senders.size > 0) {
+				for (const invalidSnippet of invalid_senders.values()) {
+					if (invalidSnippet !== "" && messageObj.sender.indexOf(invalidSnippet) !== -1) {
+						// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
+						messageObj.sender = "Error: Invalid Sender";
+						return messageObj;
+					}
 				}
 			}
 		}
@@ -145,7 +150,7 @@ export default class MessageParser {
 		}
 
 		full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
-		console.log(`!!full text has ${full_text.indexOf('http')} links`);
+		// console.log(`!!full text has ${full_text.indexOf('http')} links`);
 
 		// call chat gpt
 		if (messageObj.sender !== "Error: Invalid Sender") {
@@ -169,8 +174,8 @@ export default class MessageParser {
 		return result;
 	};
 
-	static callGpt = async(messageObj:any, full_text:string, gptKey:string|undefined) => {
-
+	static callGpt = async (messageObj: any, full_text: string, gptKey: string | undefined) => {
+		console.log("GPT called");
 		const gptRes = await GptManager.askGPt(messageObj.sender, messageObj.subject, full_text, gptKey);
 
 		// console.log("Gpt result: ",gptRes);

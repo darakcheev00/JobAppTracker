@@ -73,9 +73,9 @@ export default class GptManager {
 
         result = result.slice(result.lastIndexOf('{'), result.lastIndexOf('}') + 1)
             .replace("Levi's", 'Levis')
+            .replace("Hudson's", 'Hudsons')
             .replace(/'/g, '"')
             .replace(/\\/g, '');
-
 
         return result;
     }
