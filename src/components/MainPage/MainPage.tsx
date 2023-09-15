@@ -5,6 +5,7 @@ import StorageManager, { Message } from '../../utils/chrome-storage-utils';
 import GmailApiManager from '../../utils/gmail';
 import AuthManager from '../../utils/auth';
 
+
 import './MainPage.scss';
 import { serialize } from 'v8';
 
@@ -16,7 +17,8 @@ type MainPageProps = {
     gptKeyValid: boolean | undefined;
     setGptKeyValid: (key: boolean) => void;
     showMotivQuote: boolean;
-    invalidEmails: string[];
+    invalidEmails: Set<string>;
+    setInvalidEmails: (key: Set<string>) => void;
     tableData: Message[] | undefined;
     setTableData: (key: Message[] | undefined) => void;
     dateNewestMsg: number;
@@ -51,18 +53,19 @@ const statusDisplayNames: { [key: string]: string } = {
     "invited to apply": "Invited to apply"
 }
 
-export default function MainPage({ authToken, 
-                                    setAuthToken, 
-                                    gptKey, 
-                                    setGptKey, 
-                                    gptKeyValid, 
-                                    setGptKeyValid, 
-                                    showMotivQuote, 
-                                    invalidEmails,
-                                    tableData,
-                                    setTableData,
-                                    dateNewestMsg,
-                                    setDateNewestMsg}: MainPageProps) {
+export default function MainPage({ authToken,
+    setAuthToken,
+    gptKey,
+    setGptKey,
+    gptKeyValid,
+    setGptKeyValid,
+    showMotivQuote,
+    invalidEmails,
+    setInvalidEmails,
+    tableData,
+    setTableData,
+    dateNewestMsg,
+    setDateNewestMsg }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [motivQuote, setMotivQuote] = useState<string | undefined>("");
@@ -124,9 +127,19 @@ export default function MainPage({ authToken,
             setAuthToken(gmailToken);
         }
 
-        const { validMessages, newestMsgDate } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
+        const { validMessages, newestMsgDate, invalidSendersList } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
 
         console.log("Messages: ", validMessages);
+
+        if (invalidSendersList) {
+            let newSet = invalidEmails;
+            for (const item of invalidSendersList){
+                newSet.add(item);
+            }
+            // console.log(`invalidSendersSet: ${invalidSendersList}`)
+            setInvalidEmails(newSet);
+            StorageManager.setInvalidEmails(newSet);
+        }
 
         // append to existing messages
         let displayMsg = "No new emails."
@@ -167,17 +180,19 @@ export default function MainPage({ authToken,
         }
     }, [searchTerm]);
 
-    const filterAll = () => {setDisplayedTableData(tableData)};
-    const filterApplied = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received"))}
-    const filterRejected = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected"))}
-    const filterInterviews = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested"))}
-    const filterOffers = () => {setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer"))}
-    const filterOther = () => {setDisplayedTableData(tableData?.filter(item => {
-        return item.gptRes.status !== "application received" &&
-                item.gptRes.status !== "rejected" && 
-                item.gptRes.status !== "interview requested" && 
+    const filterAll = () => { setDisplayedTableData(tableData) };
+    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received")) }
+    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected")) }
+    const filterInterviews = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested")) }
+    const filterOffers = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer")) }
+    const filterOther = () => {
+        setDisplayedTableData(tableData?.filter(item => {
+            return item.gptRes.status !== "application received" &&
+                item.gptRes.status !== "rejected" &&
+                item.gptRes.status !== "interview requested" &&
                 item.gptRes.status !== "received offer"
-    }))}
+        }))
+    }
 
     return (
         <div>

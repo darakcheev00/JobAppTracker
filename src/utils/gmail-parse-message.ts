@@ -61,7 +61,7 @@ export default class MessageParser {
 	 * @param  {object} response
 	 * @return {object}
 	 */
-	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders:string[]) => {
+	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders:Set<string>) => {
 		var messageObj = {
 			id: response.id,
 			snippet: response.snippet,
@@ -176,16 +176,13 @@ export default class MessageParser {
 		// console.log("Gpt result: ",gptRes);
 
 		if (gptRes) {
-			const tempLower = gptRes.toLowerCase();
-			if (tempLower.indexOf("not related to job application") === -1) {
-				try {
-					let jsonRes = JSON.parse(gptRes);
-					jsonRes.status.toLowerCase()
-					return jsonRes;
-				} catch (e) {
-					console.error(e, gptRes);
-					return {};
-				}
+			try {
+				let jsonRes = JSON.parse(gptRes);
+				jsonRes.status.toLowerCase()
+				return jsonRes;
+			} catch (e) {
+				console.error(e, gptRes);
+				return {};
 			}
 		}
 	}

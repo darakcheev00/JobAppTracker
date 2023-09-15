@@ -8,7 +8,6 @@ import StorageManager, {Message} from './utils/chrome-storage-utils';
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
 
-
 import './App.css';
 
 function App() {
@@ -23,7 +22,7 @@ function App() {
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [showMotivQuote, setShowMotivQuote] = useState<boolean>(false);
 
-	const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
+	const [invalidEmails, setInvalidEmails] = useState<Set<string>>(new Set<string>());
 
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
     const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
@@ -95,7 +94,8 @@ function App() {
 										gptKeyValid, 
 										setGptKeyValid, 
 										showMotivQuote, 
-										invalidEmails, 
+										invalidEmails,
+										setInvalidEmails,
 										tableData,
 										setTableData,
 										dateNewestMsg, 

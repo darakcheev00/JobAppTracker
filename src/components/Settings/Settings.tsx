@@ -12,8 +12,8 @@ type Props = {
     setShowSettings: (key: boolean) => void;
     setShowMotivQuote: (key: boolean) => void;
     showMotivQuote: boolean;
-    invalidEmails: string[];
-    setInvalidEmails: (key: string[]) => void;
+    invalidEmails: Set<string>;
+    setInvalidEmails: (key: Set<string>) => void;
     setTableData: (key: Message[] | undefined) => void;
     setDateNewestMsg: (key: number) => void;
 };
@@ -28,7 +28,7 @@ export default function Settings({ setAuthenticated,
                                     setDateNewestMsg
                                  }: Props) {
 
-    const [textareaValue, setTextareaValue] = useState(invalidEmails.join('\n')); // Initialize with existing emails
+    const [textareaValue, setTextareaValue] = useState(Array.from(invalidEmails).join('\n')); // Initialize with existing emails
 
 
     const { register, handleSubmit, reset } = useForm<InvalidEmailsSubmitForm>();
@@ -53,9 +53,13 @@ export default function Settings({ setAuthenticated,
         console.log(`Submitted string: ${textareaValue}`);
         const inputString = textareaValue.replace(/'/g, '').replace(/"/g, '');
 
-        const stringList = inputString.split('\n').map(email => email.trim());;
-        setInvalidEmails(stringList);
-        await StorageManager.setInvalidEmails(stringList);
+        const stringList = inputString.split('\n').map(email => email.trim());
+        const stringSet = new Set(stringList);
+
+        setInvalidEmails(stringSet);
+        setTextareaValue(Array.from(stringSet).join('\n'));
+        
+        await StorageManager.setInvalidEmails(stringSet);
     }
 
     const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -67,14 +71,14 @@ export default function Settings({ setAuthenticated,
         <div className='settings-card'>
             <h2>Settings</h2>
             <div className='settings-row'>
-                <h3>Motivational quote: </h3>
+                <h3>Motivational quote ⚠️💲: </h3>
                 <button onClick={toggleQuoteGen}>
                     {showMotivQuote ? "Turned on ⚠️💲" : "Turned off"}
                 </button>
             </div>
 
             <div className='settings-row'>
-                <h3>Clear today's messages: </h3>
+                <h3>Clear today's messages ⚠️💲💲: </h3>
                 <button onClick={reloadToday}>Clear</button>
             </div>
 

@@ -32,7 +32,7 @@ export default class GmailApiManager {
         }
     }
 
-    static getMessages = async (token: string | undefined, newestMsgDate: number, gptKey: string | undefined, invalid_senders:string[]) => {
+    static getMessages = async (token: string | undefined, newestMsgDate: number, gptKey: string | undefined, invalid_senders:Set<string>) => {
         console.log(`query: in:inbox category:primary after:${new Date(newestMsgDate)}`)
         const query = `in:inbox category:primary after:${newestMsgDate / 1000}`;
         // const query = `in:inbox category:primary after:${1694063429}`;
@@ -81,12 +81,20 @@ export default class GmailApiManager {
                 // console.log(full_message);
 
                 const reduced_message = await MessageParser.parseMessage(full_message, gptKey, invalid_senders);
-
                 return reduced_message;
             });
 
             const reduced_messages = await Promise.all(messagePromises);
             console.log("async promises completed.");
+
+
+
+            let invalidSendersList: Set<string> = new Set<string>();
+            for (const item of reduced_messages){
+                if (item.gptRes && item.sender !== "Error: Invalid Sender" && item.gptRes.status.toLowerCase() === "not related to job application"){
+                    invalidSendersList.add(item.sender.slice(item.sender.indexOf("<"),item.sender.length+1));
+                }
+            }
 
             // Filter out invalid messages
             const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && 
@@ -99,6 +107,7 @@ export default class GmailApiManager {
             return {
                 validMessages: valid_messages,
                 newestMsgDate: updatedNewestMsgDate,
+                invalidSendersList: invalidSendersList
             };
 
         } catch (error) {
