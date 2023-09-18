@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import GptForm from '../GptForm';
+import GptForm from './GptForm';
+import AppsChart from './AppsChart';
 import GptManager from '../../utils/gptmodule';
 import StorageManager, { Message } from '../../utils/chrome-storage-utils';
 import GmailApiManager from '../../utils/gmail';
@@ -23,6 +24,7 @@ type MainPageProps = {
     setTableData: (key: Message[] | undefined) => void;
     dateNewestMsg: number;
     setDateNewestMsg: (key: number) => void;
+    showChart: boolean;
 };
 
 interface TableCounts {
@@ -65,13 +67,16 @@ export default function MainPage({ authToken,
     tableData,
     setTableData,
     dateNewestMsg,
-    setDateNewestMsg }: MainPageProps) {
+    setDateNewestMsg,
+    showChart }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [motivQuote, setMotivQuote] = useState<string | undefined>("");
     const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
     const [searchTerm, setSearchTerm] = useState<string | undefined>("");
+    const [dataFilter, setDataFilter] = useState<number>(0);
+
 
     useEffect(() => {
         (async () => {
@@ -176,9 +181,9 @@ export default function MainPage({ authToken,
         }
     }, [searchTerm]);
 
-    const filterAll = () => { setDisplayedTableData(tableData) };
-    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received")) }
-    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected")) }
+    const filterAll = () => { setDisplayedTableData(tableData); setDataFilter(0); };
+    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received")); setDataFilter(1); }
+    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected")); setDataFilter(2); }
     const filterInterviews = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested")) }
     const filterOffers = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer")) }
     const filterOther = () => {
@@ -207,7 +212,9 @@ export default function MainPage({ authToken,
         <div>
             {showMotivQuote && <h3>{motivQuote}</h3>}
 
-            {!gptKeyValid && <GptForm setGptKey={setGptKey} setGptKeyValid={setGptKeyValid} setRefreshMsg={setRefreshMsg} />}
+            {!gptKeyValid && <GptForm {...{setGptKey,setGptKeyValid,setRefreshMsg}}/>}
+
+            {showChart && <AppsChart {...{tableData, dataFilter}}/>}
 
             <div className="table-counts">
                 <button onClick={filterAll}>All</button>

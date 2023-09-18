@@ -42,10 +42,16 @@
   top: 30px;
 }
 
-.settings-button {
+#settings-button {
   position: absolute;
   top: 10px; /* Adjust top and right values to position the button */
   right: 10px;
+}
+
+#chart-button {
+  position: absolute;
+  top: 10px; /* Adjust top and right values to position the button */
+  left: 10px;
 }
 
 @keyframes App-logo-spin {

@@ -20,6 +20,7 @@ function App() {
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
+	const [showChart, setShowChart] = useState<boolean>(true);
 	const [showMotivQuote, setShowMotivQuote] = useState<boolean>(false);
 
 	const [invalidEmails, setInvalidEmails] = useState<Set<string>>(new Set<string>());
@@ -71,7 +72,10 @@ function App() {
 			<h1 className="title">Trackify</h1>
 			{authenticated ? (
 				<div>
-					<button className="settings-button" onClick={() => setShowSettings(!showSettings)}>
+					<button id="chart-button" onClick={() => setShowChart(!showChart)}>
+						{!showChart ? 'Show Chart' : 'Hide Chart'}
+					</button>
+					<button id="settings-button" onClick={() => setShowSettings(!showSettings)}>
 						{!showSettings ? 'Settings' : 'Back'}
 					</button>
 
@@ -98,7 +102,8 @@ function App() {
 										tableData,
 										setTableData,
 										dateNewestMsg, 
-										setDateNewestMsg
+										setDateNewestMsg,
+										showChart
 									}} />
 					)}
 				</div>
