@@ -82,7 +82,7 @@ export default function Settings({ setAuthenticated,
             </div>
 
             <div className='settings-row'>
-                <h3>Clear today's messages ⚠️💲💲: </h3>
+                <h3>Clear today's messages ⚠️: </h3>
                 <button onClick={reloadToday}>Clear</button>
             </div>
 

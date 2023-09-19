@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import AuthManager from './utils/auth';
 import GptManager from './utils/gptmodule';
-import StorageManager, {Message} from './utils/chrome-storage-utils';
+import StorageManager, { Message } from './utils/chrome-storage-utils';
 
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
@@ -26,7 +26,7 @@ function App() {
 	const [invalidEmails, setInvalidEmails] = useState<Set<string>>(new Set<string>());
 
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
-    const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
+	const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -54,9 +54,9 @@ function App() {
 
 	}, []);
 
-	useEffect(() => { 
+	useEffect(() => {
 		console.log(invalidEmails);
-	},[invalidEmails]);
+	}, [invalidEmails]);
 
 	async function handleLoginClick() {
 		if (loading) return;
@@ -72,39 +72,42 @@ function App() {
 			<h1 className="title">Trackify</h1>
 			{authenticated ? (
 				<div>
-					<button id="chart-button" onClick={() => setShowChart(!showChart)}>
+					{!showSettings && <button id="chart-button" onClick={() => setShowChart(!showChart)}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
-					</button>
+					</button>}
+					
 					<button id="settings-button" onClick={() => setShowSettings(!showSettings)}>
 						{!showSettings ? 'Settings' : 'Back'}
 					</button>
 
 					{showSettings ? (
-						<Settings {...{ setAuthenticated, 
-										setShowSettings, 
-										setShowMotivQuote, 
-										showMotivQuote, 
-										invalidEmails, 
-										setInvalidEmails,
-										setTableData,
-										setDateNewestMsg
-									}} />
+						<Settings {...{
+							setAuthenticated,
+							setShowSettings,
+							setShowMotivQuote,
+							showMotivQuote,
+							invalidEmails,
+							setInvalidEmails,
+							setTableData,
+							setDateNewestMsg
+						}} />
 					) : (
-						<MainPage {...{ authToken, 
-										setAuthToken, 
-										gptKey, 
-										setGptKey, 
-										gptKeyValid, 
-										setGptKeyValid, 
-										showMotivQuote, 
-										invalidEmails,
-										setInvalidEmails,
-										tableData,
-										setTableData,
-										dateNewestMsg, 
-										setDateNewestMsg,
-										showChart
-									}} />
+						<MainPage {...{
+							authToken,
+							setAuthToken,
+							gptKey,
+							setGptKey,
+							gptKeyValid,
+							setGptKeyValid,
+							showMotivQuote,
+							invalidEmails,
+							setInvalidEmails,
+							tableData,
+							setTableData,
+							dateNewestMsg,
+							setDateNewestMsg,
+							showChart
+						}} />
 					)}
 				</div>
 			) : (

@@ -1,7 +1,7 @@
 :root {
   /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
   font-family: Mukta, sans-serif;
-  line-height: 1.5;
+  line-height: 1.5; 
   font-weight: 400;
   min-width: 780px;
   max-width: 780px;
@@ -17,6 +17,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  overflow: hidden;
 }
 
 code {

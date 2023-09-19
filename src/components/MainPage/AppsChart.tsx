@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Message } from '../../utils/chrome-storage-utils';
 
-import { ComposedChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Label, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Label, CartesianGrid, ResponsiveContainer  } from 'recharts';
 
 import { table } from 'console';
 
@@ -13,15 +13,30 @@ type AppsChartProps = {
 type ChartDailyData = {
     date: string;
     dailyCountAll: number;
-    dailyApplied: number;
-    dailyRejected: number;
-    cumulCount: number;
+    Applied_today: number;
+    Rejected_today: number;
+    Cumulative: number;
 }
 
 enum Ranges {
     WEEK = 7,
     MONTH = 31,
 }
+
+const monthMap: Record<number, string> = {
+    0: 'Jan',
+    1: 'Feb',
+    2: 'Mar',
+    3: 'Apr',
+    4: 'May',
+    5: 'Jun',
+    6: 'Jul',
+    7: 'Aug',
+    8: 'Sep',
+    9: 'Oct',
+    10: 'Nov',
+    11: 'Dec',
+};
 
 const clr_appsent = '#fff157';
 const clr_actionReq = '#ffd190';
@@ -80,11 +95,11 @@ export default function AppsChart({ tableData, dataFilter }: AppsChartProps) {
                 cumulCount += dayCountApplied;
 
                 data.push({
-                    date: `${chartDates[i].getMonth() + 1}/${chartDates[i].getDate()}`,
+                    date: `${monthMap[chartDates[i].getMonth() + 1]} ${chartDates[i].getDate()}`,
                     dailyCountAll: 0,
-                    dailyApplied: dayCountApplied,
-                    dailyRejected: dayCountRejected,
-                    cumulCount: cumulCount,
+                    Applied_today: dayCountApplied,
+                    Rejected_today: dayCountRejected,
+                    Cumulative: cumulCount,
                 });
             }
             setChartData(data);
@@ -105,6 +120,7 @@ export default function AppsChart({ tableData, dataFilter }: AppsChartProps) {
         setDisplayedChartData(chartData?.slice(-dateRange));
     }, [chartData, dateRange]);
 
+
     return (
         <div>
             <div>
@@ -121,15 +137,23 @@ export default function AppsChart({ tableData, dataFilter }: AppsChartProps) {
                 <CartesianGrid strokeDasharray="1 3" vertical={false} />
 
                 <XAxis dataKey="date" label={{ value: 'Date', offset: 0, position: 'insideBottom' }} />
-                <YAxis yAxisId="left" label={{ value: 'Daily Count', offset: 0, angle: -90}} />
+                <YAxis yAxisId="left" label={{ value: 'Daily Count', offset: 0, angle: -90 }} />
                 <YAxis yAxisId="right" label={{ value: 'Cumulative Count', offset: 20, angle: -90 }} orientation="right" />
 
-                <Tooltip />
+                <Tooltip 
+                    contentStyle={{
+                        color: 'black',
+                        background: 'black'
+                    }}
+                    labelStyle={{
+                        color: 'white'
+                    }}
+                />
 
-                {(dataFilter == 0 || dataFilter == 1) && <Bar yAxisId="left" dataKey="dailyApplied" fill={clr_appsent} />}
-                {(dataFilter == 0 || dataFilter == 1) && <Line yAxisId="right" type="monotone" dataKey="cumulCount" dot={false} stroke={clr_appsent} />}
+                {(dataFilter == 0 || dataFilter == 1) && <Bar yAxisId="left" dataKey="Applied_today" fill={clr_appsent} />}
+                {(dataFilter == 0 || dataFilter == 1) && <Line yAxisId="right" type="monotone" dataKey="Cumulative" dot={false} stroke={clr_appsent} />}
                 
-                {(dataFilter == 0 || dataFilter == 2) && <Bar yAxisId="left" dataKey="dailyRejected" fill={clr_rejected} />}
+                {(dataFilter == 0 || dataFilter == 2) && <Bar yAxisId="left" dataKey="Rejected_today" fill={clr_rejected} />}
             </ComposedChart>
         </div>
     )
