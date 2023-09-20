@@ -100,7 +100,7 @@ export default class GmailApiManager {
             const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && 
                                                             message.gptRes !== null && 
                                                             message.gptRes !== undefined && 
-                                                            message.gptRes.status !== "not related to job application" && 
+                                                            message.gptRes.status.toLowerCase() !== "not related to job application" && 
                                                             message.gptRes.company !== "unspecified");
             
             console.log("messages filtered.");
