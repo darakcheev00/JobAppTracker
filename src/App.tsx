@@ -39,6 +39,7 @@ function App() {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
 			}
+			await AuthManager.getUserEmail();
 
 			setInvalidEmails(await StorageManager.getInvalidEmails());
 
@@ -72,7 +73,7 @@ function App() {
 			<h1 className="title">Trackify</h1>
 			{authenticated ? (
 				<div>
-					{!showSettings && <button id="chart-button" onClick={() => setShowChart(!showChart)}>
+					{!showSettings && tableData && <button id="chart-button" onClick={() => setShowChart(!showChart)}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
 					

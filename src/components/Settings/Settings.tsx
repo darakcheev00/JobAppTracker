@@ -30,8 +30,12 @@ export default function Settings({ setAuthenticated,
 
     const [textareaValue, setTextareaValue] = useState(Array.from(invalidEmails).join('\n')); // Initialize with existing emails
 
+    const { register, handleSubmit, reset } = useForm<InvalidEmailsSubmitForm>();  
+    const [userEmail, setUserEmail] = useState('');
 
-    const { register, handleSubmit, reset } = useForm<InvalidEmailsSubmitForm>();
+    // useEffect(()=>{
+    //     (async() => setUserEmail(await AuthManager.getUserEmail()))();
+    // },[]);
 
     const handleLogoutClick = async () => {
         await AuthManager.logout();
@@ -74,6 +78,8 @@ export default function Settings({ setAuthenticated,
 
     return (
         <div className='settings-card'>
+            <h3>{`Retrieving emails from: ${userEmail}`}</h3>
+
             <div className='settings-row'>
                 <h3>Motivational quote ⚠️💲: </h3>
                 <button onClick={toggleQuoteGen}>

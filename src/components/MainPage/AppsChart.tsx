@@ -95,7 +95,7 @@ export default function AppsChart({ tableData, dataFilter }: AppsChartProps) {
                 cumulCount += dayCountApplied;
 
                 data.push({
-                    date: `${monthMap[chartDates[i].getMonth() + 1]} ${chartDates[i].getDate()}`,
+                    date: `${monthMap[chartDates[i].getMonth()]} ${chartDates[i].getDate()}`,
                     dailyCountAll: 0,
                     Applied_today: dayCountApplied,
                     Rejected_today: dayCountRejected,

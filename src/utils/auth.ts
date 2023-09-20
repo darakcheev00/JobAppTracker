@@ -34,8 +34,11 @@ export default class AuthManager {
     }
 
     static getUserEmail = async () => {
-        await chrome.identity.getProfileUserInfo((info) => {
-            console.log(info.email);
+        return new Promise((resolve,reject) => {
+            chrome.identity.getProfileUserInfo((info) => {
+                console.log(info.email);
+                resolve(info.email);
+            });
         });
     }
 
@@ -47,5 +50,4 @@ export default class AuthManager {
         const [_, authToken] = await this.isAuthenticated();
         console.log("User logged out. Auth:", authToken);
     }
-
 }

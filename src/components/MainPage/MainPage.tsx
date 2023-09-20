@@ -214,7 +214,7 @@ export default function MainPage({ authToken,
 
             {!gptKeyValid && <GptForm {...{setGptKey,setGptKeyValid,setRefreshMsg}}/>}
 
-            {showChart && <AppsChart {...{tableData, dataFilter}}/>}
+            {showChart && tableData && <AppsChart {...{tableData, dataFilter}}/>}
 
             <div className="table-counts">
                 <button onClick={filterAll}>All</button>
