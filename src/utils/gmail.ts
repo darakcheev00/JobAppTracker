@@ -101,6 +101,7 @@ export default class GmailApiManager {
                                                             message.gptRes !== null && 
                                                             message.gptRes !== undefined && 
                                                             message.gptRes.status.toLowerCase() !== "not related to job application" && 
+                                                            message.gptRes.status.toLowerCase() !== "not_related_to_job_application" && 
                                                             message.gptRes.company !== "unspecified");
             
             console.log("messages filtered.");
