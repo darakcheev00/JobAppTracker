@@ -38,7 +38,7 @@ export default class GmailApiManager {
         // const query = `in:inbox category:primary after:${1694063429}`;
         try {
             console.log(query);
-            const data = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}`, {
+            const data = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10000&q=${query}`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -100,7 +100,8 @@ export default class GmailApiManager {
             const valid_messages = reduced_messages.filter(message => message.sender !== "Error: Invalid Sender" && 
                                                             message.gptRes !== null && 
                                                             message.gptRes !== undefined && 
-                                                            message.gptRes.status !== "not related to job application" && 
+                                                            message.gptRes.status.toLowerCase() !== "not related to job application" && 
+                                                            message.gptRes.status.toLowerCase() !== "not_related_to_job_application" && 
                                                             message.gptRes.company !== "unspecified");
             
             console.log("messages filtered.");
