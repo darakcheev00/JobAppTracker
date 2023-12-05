@@ -1,6 +1,12 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { refreshEmails } from './emailController';
+import { log } from 'console';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import pool from './db';
+
+import invalidSenderRoutes from './routes/invalidSenderRoutes';
+
 const cors = require("cors");
 
 
@@ -13,40 +19,16 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-const pool = require('./db');
-
 app.get('/', (req: Request, res: Response) => {
     res.send('home');
 });
 
-app.get('/auth/', async (req, res) => {
-    // sign in
-    res.send('sign in response');
-});
-
-app.get('/emails/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const result = await pool.query("SELECT * FROM email WHERE userId = $1", [userId]);
-        console.log(res.json(result.rows));
-    } catch (err) {
-        console.error('Error executing query', err);
-        res.status(500).json('Internal server error');
-    }
-});
-
-app.get('/emails/new/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    const new_emails = refreshEmails(userId, pool);
-    res.json(new_emails);
-});
-
-app.get('/invalid-senders/:userId', async (req, res) => {
-    // Get list of invalid senders from db
-});
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/invalid-senders', invalidSenderRoutes);
 
 
-// Connect to database
+// ===========================================================================================
 pool.connect()
     .then(() => {
         console.log("[server]: Connected to the database")
