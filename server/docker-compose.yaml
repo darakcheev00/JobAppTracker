@@ -1,0 +1,47 @@
+version: '3.9'
+services:
+  server:
+    build:
+      context: .
+    ports:
+      - "8000:3000"
+    volumes:
+      - ./app/src:/app/src
+    command: >
+      sh -c "npm run build &&
+             npm start"
+    environment:
+      DB_HOST:      postgres
+      DB_NAME:      daniel_dev
+      DB_USER:      daniel_dev
+      DB_PASSWORD:  changeme
+      DB_PORT:      5432
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13-alpine
+    restart: always
+    ports:
+      - "5001:5432"
+    volumes:
+      - pg_data_vol:/var/lib/postgresql/data
+      - ./startup_scripts/init_database.sql:/docker-entrypoint-initdb.d/init_database.sql
+    environment:
+      POSTGRES_USER: daniel_dev
+      POSTGRES_PASSWORD: changeme
+      # POSTGRES_DB: TrackifyDB
+
+  # pgadmin-compose:
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: "test@gmail.com"
+  #     PGADMIN_DEFAULT_PASSWORD: "test123!"
+  #   ports:
+  #     - "16543:80"
+  #   depends_on:
+  #     - postgres
+
+
+volumes:
+  pg_data_vol:
