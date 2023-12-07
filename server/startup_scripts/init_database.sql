@@ -1,53 +1,53 @@
 CREATE TABLE IF NOT EXISTS UserAccount 
 (
-    Id              SERIAL          PRIMARY KEY,
+    UserId          SERIAL          PRIMARY KEY,
     UserEmail       VARCHAR (255)   NOT NULL,
-    FullName        VARCHAR (255),
-    AccessToken     VARCHAR (255),  
-    RefreshToken    VARCHAR (255)
+    AuthToken       VARCHAR (255),  
+    GptKey          VARCHAR (255),
+    NewestMsgDate   TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS InvalidSender
 (
-    UserId          INT             NOT NULL    REFERENCES UserAccount (Id)     ON DELETE CASCADE,
+    UserId          INT             NOT NULL    REFERENCES UserAccount (UserId)     ON DELETE CASCADE,
     EmailAddress    VARCHAR(255)    NOT NULL,
     PRIMARY KEY (UserId, EmailAddress)
 );
 
 CREATE TABLE IF NOT EXISTS Company 
 (
-    Id              SERIAL          PRIMARY KEY,
+    CompanyId       SERIAL          PRIMARY KEY,
     CompanyName     VARCHAR(255)    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Position
 (
-    Id              SERIAL          PRIMARY KEY,
+    PositionId      SERIAL          PRIMARY KEY,
     PositionName    VARCHAR(255)    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Job
 (
-    Id              SERIAL          PRIMARY KEY,
-    PositionId      INT             NOT NULL    REFERENCES Position (Id),
-    CompanyId       INT             NOT NULL    REFERENCES Company (Id)
+    JobId           SERIAL          PRIMARY KEY,
+    PositionId      INT             NOT NULL    REFERENCES Position (PositionId),
+    CompanyId       INT             NOT NULL    REFERENCES Company (CompanyId)
 );
 
 CREATE TABLE IF NOT EXISTS StatusType
 (
-    Id              SERIAL          PRIMARY KEY,
+    StatusId        SERIAL          PRIMARY KEY,
     StatusName      VARCHAR(255)    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS AppStatus
 (
-    UserId          INT             NOT NULL    REFERENCES UserAccount (Id)     ON DELETE CASCADE,
-    JobId           INT             NOT NULL    REFERENCES Job (Id),
-    StatusId        INT             NOT NULL    REFERENCES StatusType (Id),
+    AppStatusId     SERIAL          PRIMARY KEY,
+    UserId          INT             NOT NULL    REFERENCES UserAccount (UserId)     ON DELETE CASCADE,
+    JobId           INT             NOT NULL    REFERENCES Job (JobId),
+    StatusId        INT             NOT NULL    REFERENCES StatusType (StatusId),
     Date            TIMESTAMP       NOT NULL,
     Sender          VARCHAR (255)   NOT NULL,
-    GmailMsgId      VARCHAR (255)   NOT NULL,
-    PRIMARY KEY (UserId, JobId, StatusId)
+    GmailMsgId      VARCHAR (255)   NOT NULL
 );
 
 

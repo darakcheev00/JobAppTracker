@@ -3,9 +3,10 @@ import dotenv from 'dotenv';
 import { log } from 'console';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
-import pool from './db';
-
 import invalidSenderRoutes from './routes/invalidSenderRoutes';
+import statusRoutes from './routes/statusRoutes';
+import pool from './db/db_config';
+
 
 const cors = require("cors");
 
@@ -26,7 +27,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/invalid-senders', invalidSenderRoutes);
-
+app.use('/status', statusRoutes);
 
 // ===========================================================================================
 pool.connect()

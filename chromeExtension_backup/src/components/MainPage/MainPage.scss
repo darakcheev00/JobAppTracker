@@ -1,0 +1,213 @@
+/*   color variables */
+$clr-primary: #81d4fa;
+$clr-primary-light: #e1f5fe;
+$clr-primary-dark: #4fc3f7;
+$clr-gray100: #f9fbff;
+$clr-gray150: #f4f6fb;
+$clr-gray200: #eef1f6;
+$clr-gray300: #e1e5ee;
+$clr-gray400: #767b91;
+$clr-gray500: #4f546c;
+$clr-gray600: #2a324b;
+$clr-gray700: #161d34;
+$clr-appsent: #fff0c2;
+$clr-appsent-font: #a68b00;
+$clr-actionReq: #ffd190;
+$clr-actionReq-font: #bb7300;
+$clr-rejected: #ffcdd2;
+$clr-rejected-font: #c62828;
+$clr-interview: #c8e6c9;
+$clr-interview-font: #388e3c;
+$clr-offer: #dcc8e6;
+$clr-offer-font: #7b3b9b;
+$clr-unspec: #c0c0c0;
+$clr-unspec-font: #000000;
+$clr-other: #9ddaf7;
+$clr-other-font: #005780;
+$clr-link: #2962ff;
+
+/*   border radius */
+$radius: 0.2rem;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+#applied-btn {
+  // color: $clr-appsent;
+  background-color: $clr-appsent;
+  color: $clr-appsent-font;
+}
+
+#rejected-btn {
+  // color: $clr-rejected;
+  background-color: $clr-rejected;
+  color: $clr-rejected-font;
+}
+
+#interviews-btn {
+  // color: $clr-interview;
+  background-color: $clr-interview;
+  color: $clr-interview-font;
+}
+
+#offers-btn {
+  // color: $clr-offer;
+  background-color: $clr-offer;
+  color: $clr-offer-font;
+}
+
+#other-btn {
+  // color: $clr-offer;
+  background-color: $clr-other;
+  color: $clr-other-font;
+}
+
+.group2 {
+  display: flex;
+  align-items: left;
+}
+
+.tableCard {
+  border-radius: 12px;
+  font-family: Mukta, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: $clr-gray500;
+  font-size: 0.9rem;
+  background-color: $clr-gray100;
+  max-width: 100%;
+}
+
+table {
+  border-radius: 12px;
+  border-collapse: collapse;
+  box-shadow: 0 5px 10px $clr-gray300;
+  background-color: white;
+
+  max-width: 100%;
+  // overflow: hidden;
+
+  thead {
+    border-radius: 12px;
+    box-shadow: 0 5px 10px $clr-gray300;
+  }
+
+  th {
+    padding: 1rem 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    font-size: 0.7rem;
+    font-weight: 900;
+  }
+
+  td {
+    padding: 0.4rem 1rem;
+    white-space: wrap;
+  }
+
+  .company-col,
+  .position-col {
+    text-align: left;
+  }
+
+  .company-col,
+  .company-col-head {
+    padding-left: 2rem;
+    width: 175px;
+  }
+
+  .position-col,
+  .position-col-head {
+    width: 280px;
+  }
+
+  .status-col {
+    width: 130px;
+  }
+
+  .date-col {
+    width: 90px;
+  }
+
+  .delete-col {
+    padding-right: 0.7rem;
+    padding-left: 0.2rem;
+    width: 25px;
+  }
+
+  #delete-button {
+    margin: 2px;
+    margin-left: -7px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    padding: 0.2em 0.2em;
+    font-size: 0.7em;
+    font-weight: 100;
+    font-family: inherit;
+    background-color: transparent;
+    cursor: pointer;
+    transition: border-color 0.25s;
+  }
+
+  a {
+    text-decoration: none;
+    color: $clr-link;
+  }
+
+  .status {
+    border-radius: $radius;
+    background-color: red;
+    padding: 0.2rem 1rem;
+    text-align: center;
+    text-transform: capitalize;
+
+    &-appsent {
+      background-color: $clr-appsent;
+      color: $clr-appsent-font;
+    }
+
+    &-actionReq {
+      background-color: $clr-actionReq;
+      color: $clr-actionReq-font;
+    }
+
+    &-rejected {
+      background-color: $clr-rejected;
+      color: $clr-rejected-font;
+    }
+
+    &-interview {
+      background-color: $clr-interview;
+      color: $clr-interview-font;
+    }
+
+    &-offer {
+      background-color: $clr-offer;
+      color: $clr-offer-font;
+    }
+
+    &-unspec {
+      background-color: $clr-unspec;
+      color: $clr-unspec-font;
+    }
+  }
+
+  .amount {
+    text-align: right;
+  }
+
+  //Color alternating rows
+  tr:nth-child(even) {
+    background-color: $clr-gray150;
+  }
+}
+
+
+.table-counts {
+  text-align: center;
+}

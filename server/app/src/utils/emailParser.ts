@@ -1,7 +1,7 @@
 import { decode } from './base64';
 import GptManager from './gptmodule';
 
-export default class MessageParser {
+export default class EmailParser {
 
 	/**
 	 * Decodes a url safe Base64 string to its original representation.
@@ -90,8 +90,8 @@ export default class MessageParser {
 		if (headers.from) {
 			messageObj.sender = headers.from;
 
-			// console.log(`Invalid senders size: ${invalid_senders.size}`);
-			// console.log(invalid_senders);
+			// Return if sender is in invalid sender list
+			// get cached db result
 			if (invalid_senders.size > 0) {
 				for (const invalidSnippet of invalid_senders.values()) {
 					if (invalidSnippet !== "" && messageObj.sender.indexOf(invalidSnippet) !== -1) {
@@ -149,6 +149,7 @@ export default class MessageParser {
 			full_text = messageObj.textPlain;
 		}
 
+		// Remove links from text
 		full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
 		// console.log(`!!full text has ${full_text.indexOf('http')} links`);
 

@@ -3,8 +3,8 @@ import GptForm from './GptForm';
 import AppsChart from './AppsChart';
 import GptManager from '../../utils/gptmodule';
 import StorageManager, { Message } from '../../utils/chrome-storage-utils';
+import GmailApiManager from '../../utils/gmail';
 import AuthManager from '../../utils/auth';
-import GmailApiManager from '../../utils/gmailApiService';
 
 
 import './MainPage.scss';
@@ -13,10 +13,17 @@ import { serialize } from 'v8';
 type MainPageProps = {
     authToken: string | undefined;
     setAuthToken: (key: string | undefined) => void;
+    gptKey: string | undefined;
+    setGptKey: (key: string) => void;
     gptKeyValid: boolean | undefined;
     setGptKeyValid: (key: boolean) => void;
+    showMotivQuote: boolean;
+    invalidEmails: Set<string>;
+    setInvalidEmails: (key: Set<string>) => void;
     tableData: Message[] | undefined;
     setTableData: (key: Message[] | undefined) => void;
+    dateNewestMsg: number;
+    setDateNewestMsg: (key: number) => void;
     showChart: boolean;
 };
 
@@ -48,16 +55,23 @@ const statusDisplayNames: { [key: string]: string } = {
     "invited to apply": "Invited to apply"
 }
 
-export default function MainPage({ 
-    authToken,
+export default function MainPage({ authToken,
     setAuthToken,
+    gptKey,
+    setGptKey,
     gptKeyValid,
     setGptKeyValid,
+    showMotivQuote,
+    invalidEmails,
+    setInvalidEmails,
     tableData,
     setTableData,
+    dateNewestMsg,
+    setDateNewestMsg,
     showChart }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
+    const [motivQuote, setMotivQuote] = useState<string | undefined>("");
     const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
     const [searchTerm, setSearchTerm] = useState<string | undefined>("");
@@ -66,6 +80,9 @@ export default function MainPage({
 
     useEffect(() => {
         (async () => {
+            // const {newTableData, newLatestDate} = await StorageManager.rollBackToMidnight();
+            setDateNewestMsg(await StorageManager.getLatestDate());
+            // setDateNewestMsg(newLatestDate);
             const data = await StorageManager.getTableData() as Message[];
             console.log(data);
             setTableData(data);
@@ -91,25 +108,39 @@ export default function MainPage({
         setDisplayedTableData(tableData);
     }, [tableData]);
 
+    useEffect(() => {
+        if (showMotivQuote) {
+            (async () => { setMotivQuote(await GptManager.getMotivQuote(gptKey)) })();
+        }
+    }, [gptKey]);
+
     const refresh = async () => {
         console.log("Refreshing...");
         // console.log("authToken", authToken);
+        let gmailToken: string | undefined = authToken;
 
-        // if (!await GptManager.healthCheck(gptKey)) {
-        //     return;
-        // }
-
-        if (!await GmailApiManager.healthCheck(authToken)) {
-            const gmailToken = await AuthManager.authenticate();
-            setAuthToken(gmailToken);
-            // TODO: call backend endpoint to set new auth token
-            
+        if (!await GptManager.healthCheck(gptKey)) {
+            return;
         }
 
-        const validMessages: Message[] = [];
-            // await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
-        
+        if (showMotivQuote) {
+            setMotivQuote(await GptManager.getMotivQuote(gptKey));
+        }
+
+        if (!await GmailApiManager.healthCheck(authToken)) {
+            gmailToken = await AuthManager.authenticate();
+            setAuthToken(gmailToken);
+        }
+
+        const { validMessages, newestMsgDate, invalidSendersList } = await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
+
         console.log("Messages: ", validMessages);
+
+        if (invalidSendersList) {
+            const newSet = new Set([...invalidEmails,...invalidSendersList]);
+            setInvalidEmails(newSet);
+            await StorageManager.setInvalidEmails(newSet);
+        }
 
         // append to existing messages
         let displayMsg = "No new emails."
@@ -130,11 +161,11 @@ export default function MainPage({
         }, 5000);
 
         // save latest refresh click
-        // if (newestMsgDate !== undefined) {
-        //     const offSet: number = 10000;
-        //     setDateNewestMsg(newestMsgDate + offSet);
-        //     StorageManager.saveNewestMsgDate(newestMsgDate + offSet);
-        // }
+        if (newestMsgDate !== undefined) {
+            const offSet: number = 10000;
+            setDateNewestMsg(newestMsgDate + offSet);
+            StorageManager.saveNewestMsgDate(newestMsgDate + offSet);
+        }
     }
 
     const handleSearch = (val: any) => {
@@ -179,7 +210,9 @@ export default function MainPage({
 
     return (
         <div>
-            {!gptKeyValid && <GptForm {...{setGptKeyValid,setRefreshMsg}}/>}
+            {showMotivQuote && <h3>{motivQuote}</h3>}
+
+            {!gptKeyValid && <GptForm {...{setGptKey,setGptKeyValid,setRefreshMsg}}/>}
 
             {showChart && tableData && <AppsChart {...{tableData, dataFilter}}/>}
 

@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import MessageParser from './gmail-parse-message';
+import MessageParser from './emailParser';
 
 /**
  * Get messages from gmail api
@@ -56,7 +56,6 @@ export default class GmailApiManager {
             }
             
             console.log(`GMAIL API: ${info.messages.length} new messages`);
-            
 
             // get date of newest message
             const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${info.messages[0].id}`, {

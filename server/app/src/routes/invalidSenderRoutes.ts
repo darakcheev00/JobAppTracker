@@ -1,5 +1,6 @@
 import express from 'express';
-import pool from '../db';
+import pool from '../db/db_config';
+import DatabaseService from '../utils/databaseService';
 
 const router = express.Router();
 
@@ -8,12 +9,11 @@ const router = express.Router();
 router.get('/:userId', async (req, res) => {
     const userId = req.params.userId;
     try {
-        const result = await pool.query("SELECT EmailAddress FROM InvalidSender WHERE UserId = $1", [userId]);
-        if (result.rows.length === 0) return res.status(200).json("0 saved emails.");
-        res.json(result.rows);
-    } catch (err){
-        console.error("[server]: error adding user. SQL query error: ",err);
-        res.status(500).json("Internal server error");
+        const senderList = await DatabaseService.getInvalidSenders(userId);
+        if (senderList.length === 0) return res.status(200).json("0 saved emails.");
+        res.json(senderList);
+    } catch (error: any) {
+        res.status(500).json(error.message);
     }
 });
 
@@ -23,14 +23,13 @@ router.post('/:userId', async (req, res) => {
     const body = req.body;
     try {
         // see if it is already saved
-        const senderExists = await pool.query("SELECT * FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, body.email_address]);
-        if (senderExists.rows.length > 0) return res.status(200).json("email address already saved");
+        const senderExists = await DatabaseService.senderExists(userId, body.email_address);
+        if (senderExists) return res.status(200).json("email address already saved");
 
-        const result = await pool.query("INSERT INTO InvalidSender (UserId, EmailAddress) VALUES ($1, $2) RETURNING *", [userId, body.email_address]);
-        res.json(result.rows);
-    } catch (err){
-        console.error("[server]: error adding user. SQL query error: ",err);
-        res.status(500).json("Internal server error");
+        const newRowInfo = await DatabaseService.addNewInvalidSender(userId, body.email_address);
+        res.json(newRowInfo);
+    } catch (error: any) {
+        res.status(500).json(error.message);
     }
 });
 
@@ -40,14 +39,13 @@ router.delete('/:userId', async (req, res) => {
     const body = req.body;
     try {
         // if address doesnt exist then no need to delete
-        const senderExists = await pool.query("SELECT * FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, body.email_address]);
-        if (senderExists.rows.length === 0) return res.status(200).json("email address does not exist");
+        const senderExists = await DatabaseService.senderExists(userId, body.email_address);
+        if (!senderExists) return res.status(200).json("email address does not exist");
 
-        const result = await pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, body.email_address]);
+        await pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, body.email_address]);
         res.json(`Deleted address: ${body.email_address}`);
-    } catch (err){
-        console.error("[server]: error adding user. SQL query error: ",err);
-        res.status(500).json("Internal server error");
+    } catch (error: any) {
+        res.status(500).json(error.message);
     }
 });
 

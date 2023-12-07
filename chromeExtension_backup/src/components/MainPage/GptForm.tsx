@@ -7,20 +7,20 @@ type GptSubmitForm = {
     gptkeyInput: string;
 };
 type GptFormProps = {
+    setGptKey: (key: string) => void; // Define the type for setGptKey
     setGptKeyValid: (key: boolean) => void;
     setRefreshMsg: (key: string) => void;
 };
 
-export default function GptForm({ setGptKeyValid, setRefreshMsg}: GptFormProps) {
+export default function GptForm({ setGptKey, setGptKeyValid, setRefreshMsg}: GptFormProps) {
     const { register, handleSubmit, reset } = useForm<GptSubmitForm>();
 
     const handleGptKeySubmit  = async(data: GptSubmitForm) => {
         console.log(`Submitted key: ${data.gptkeyInput}`);
         let displayMsg = "Invalid key! Try again.";
-
-        // do local gpt test
         if (await GptManager.healthCheck(data.gptkeyInput)) {
-            // TODO: call backend endpoint to set (data.gptkeyInput);
+            setGptKey(data.gptkeyInput);
+            await StorageManager.setGptKey(data.gptkeyInput);
             setGptKeyValid(true);
             displayMsg = "Valid key!";
             console.log(await StorageManager.getGptKey());

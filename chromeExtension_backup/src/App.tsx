@@ -1,11 +1,9 @@
 import React from 'react';
-
+import logo from './logo.svg';
 import { useState, useEffect } from 'react';
 import AuthManager from './utils/auth';
 import GptManager from './utils/gptmodule';
 import StorageManager, { Message } from './utils/chrome-storage-utils';
-
-import axios from 'axios';
 
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
@@ -18,12 +16,17 @@ function App() {
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
 
-	// const [gptKey, setGptKey] = useState<string | undefined>('***');
+	const [gptKey, setGptKey] = useState<string | undefined>('***');
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
 
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [showChart, setShowChart] = useState<boolean>(true);
+	const [showMotivQuote, setShowMotivQuote] = useState<boolean>(false);
+
+	const [invalidEmails, setInvalidEmails] = useState<Set<string>>(new Set<string>());
+
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
+	const [dateNewestMsg, setDateNewestMsg] = useState<number>(1693607827000);
 
 	useEffect(() => {
 		console.log("starting....");
@@ -36,36 +39,31 @@ function App() {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
 			}
+			await AuthManager.getUserEmail();
 
-			// setInvalidEmails(await StorageManager.getInvalidEmails());
+			setInvalidEmails(await StorageManager.getInvalidEmails());
 
-			// const savedGptKey = await StorageManager.getGptKey();
-			// setGptKeyValid(await GptManager.healthCheck(savedGptKey));
-			// if (savedGptKey !== undefined) {
-			// 	setGptKey(savedGptKey);
-			// }
+			// await StorageManager.clearTableData();
+			// await StorageManager.resetLatestDate();
+
+			const savedGptKey = await StorageManager.getGptKey();
+			setGptKeyValid(await GptManager.healthCheck(savedGptKey));
+			if (savedGptKey !== undefined) {
+				setGptKey(savedGptKey);
+			}
 		})();
 
 	}, []);
 
+	useEffect(() => {
+		console.log(invalidEmails);
+	}, [invalidEmails]);
+
 	async function handleLoginClick() {
 		if (loading) return;
 
-		console.log("Logging in...");
-
 		const token: string | undefined = await AuthManager.authenticate();
 		console.log("authenticate returned token: ", token);
-
-		try {
-			const response = await fetch("http://localhost:8000/auth/login", {
-				method: 'POST',
-				body: JSON.stringify({ token: token })
-			});
-			console.log(`SERVER: ${await response.json()}`);
-		} catch (err) {
-			console.error("Error sending token to the backend:", err);
-		}
-
 		setAuthToken(token);
 		setAuthenticated(true);
 	};
@@ -78,7 +76,7 @@ function App() {
 					{!showSettings && tableData && <button id="chart-button" onClick={() => setShowChart(!showChart)}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
-
+					
 					<button id="settings-button" onClick={() => setShowSettings(!showSettings)}>
 						{!showSettings ? 'Settings' : 'Back'}
 					</button>
@@ -87,16 +85,28 @@ function App() {
 						<Settings {...{
 							setAuthenticated,
 							setShowSettings,
-							setTableData
+							setShowMotivQuote,
+							showMotivQuote,
+							invalidEmails,
+							setInvalidEmails,
+							setTableData,
+							setDateNewestMsg
 						}} />
 					) : (
 						<MainPage {...{
 							authToken,
 							setAuthToken,
+							gptKey,
+							setGptKey,
 							gptKeyValid,
 							setGptKeyValid,
+							showMotivQuote,
+							invalidEmails,
+							setInvalidEmails,
 							tableData,
 							setTableData,
+							dateNewestMsg,
+							setDateNewestMsg,
 							showChart
 						}} />
 					)}
@@ -104,6 +114,7 @@ function App() {
 			) : (
 				<button id="login_btn" onClick={handleLoginClick}>Log in</button>
 			)}
+
 		</div>
 	);
 }

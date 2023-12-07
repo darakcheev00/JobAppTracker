@@ -1,4 +1,3 @@
-import { UUID } from 'crypto';
 import MessageParser from './gmail-parse-message';
 
 /**

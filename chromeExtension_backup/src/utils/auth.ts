@@ -33,11 +33,20 @@ export default class AuthManager {
         return authToken.token;
     }
 
+    static getUserEmail = async () => {
+        return new Promise((resolve,reject) => {
+            chrome.identity.getProfileUserInfo((info) => {
+                console.log(info.email);
+                resolve(info.email);
+            });
+        });
+    }
+
     static logout = async () => {
         console.log("Logging out...");
         await chrome.storage.local.remove('authToken');
 
-        // Check if user is logged out
+        // DEBUG
         const [_, authToken] = await this.isAuthenticated();
         console.log("User logged out. Auth:", authToken);
     }
