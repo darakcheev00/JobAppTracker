@@ -1,22 +1,28 @@
 import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
 import DatabaseService from '../utils/databaseService';
+import { AuthedRequest, verifyToken } from '../utils/jwtService';
 
 const router = express.Router();
 
 // Get all users
 router.get('/', async (req: Request, res: Response) => {
-    try{
+    console.log(`Hit /user endpoint`);
+
+    try {
         const users = await DatabaseService.getAllUsers();
         res.json(users);
-    } catch(error: any){
+    } catch (error: any) {
         res.status(500).json(error.message);
     }
 });
 
 // Get single user
-router.get('/:userId', async (req:Request, res: Response)=>{
-    const userId = req.params.userId;
+router.get('/single', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log(`Hit /user/single endpoint`);
+
+    const userId = req.user_id;
+
     try {
         const user = await DatabaseService.getSingleUser(userId);
         res.json(user);
@@ -26,31 +32,31 @@ router.get('/:userId', async (req:Request, res: Response)=>{
 });
 
 // Create new user
-router.post('/', async(req: Request, res: Response) => {
-    const attributes = req.body;
+// router.post('/', async (req: Request, res: Response) => {
+//     const attributes = req.body;
 
-    // validate email
-    if (!isEmailValid(attributes.user_email)){
-        return res.status(400).json(`Email invalid: [${attributes.user_email}]`);
-    }
+//     // validate email
+//     if (!isEmailValid(attributes.user_email)) {
+//         return res.status(400).json(`Email invalid: [${attributes.user_email}]`);
+//     }
 
-    // validate access_token
-    if (attributes.access_token < 5){
-        return res.status(400).json("Access token invalid");
-    }
+//     // validate access_token
+//     if (attributes.access_token < 5) {
+//         return res.status(400).json("Access token invalid");
+//     }
 
-    try{
-        const newUser = await DatabaseService.addNewUser(attributes);
-        res.status(201).json(newUser);
-    } catch (error: any) {
-        res.status(500).json(error.message);
-    }
+//     try {
+//         const newUser = await DatabaseService.addNewUser(attributes);
+//         res.status(201).json(newUser);
+//     } catch (error: any) {
+//         res.status(500).json(error.message);
+//     }
 
-});
+// });
 
 
 // Update user
-router.patch('/:userId', async (req: Request, res:Response) => {
+router.patch('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const updatedUserData = req.body;
 
@@ -59,14 +65,14 @@ router.patch('/:userId', async (req: Request, res:Response) => {
 
     try {
         const userExists = await DatabaseService.userExists(userId);
-        if (!userExists){
-            return res.status(404).json({error: 'user not found'});
+        if (!userExists) {
+            return res.status(404).json({ error: 'user not found' });
         }
-        
+
         const updatedUserInfo = await DatabaseService.updateUserInfo(userId, updatedUserData);
         res.json(updatedUserInfo);
     } catch (err) {
-        console.error("[server]: error adding user. SQL query error: ",err);
+        console.error("[server]: error adding user. SQL query error: ", err);
         res.status(500).json("Internal server error");
     }
 });

@@ -2,12 +2,15 @@ import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
 import GmailService from '../utils/gmailService';
 import DatabaseService from '../utils/databaseService';
+import { AuthedRequest, verifyToken } from '../utils/jwtService';
 
 const router = express.Router();
 
 // get all status's from db (all saved)
-router.get('/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
+router.get('/', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log(`Hit /status endpoint`);
+    const userId = req.user_id;
+
     try {
         const allStatusUpdates = await DatabaseService.getAllUserStatus(userId);
 
@@ -22,7 +25,9 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
 
 // get new status's from db (call gpt and return new ones only)
-router.get('/new/:userId', async (req:Request, res: Response) => {
+router.get('/new', async (req:AuthedRequest, res: Response) => {
+    console.log(`Hit /status/new endpoint`);
+
     const userId = req.params.userId;
 
     let newestMsgDate = null;

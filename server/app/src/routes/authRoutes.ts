@@ -22,18 +22,6 @@ export const validateToken = async (token:string) => {
     }
 }
 
-// const ensureTokenExists = (req: Request, res: Response, next: any) => {
-//     const bearerHeader = req.headers["authorization"];
-//     if (typeof bearerHeader !== 'undefined'){
-//         const bearer = bearerHeader.split(" ");
-//         const bearerToken = bearer[1];
-//         req.token = bearerToken;
-//         next();
-//     } else {
-//         res.sendStatus(403);
-//     }
-// }
-
 router.post('/login', async (req: Request, res: Response) => {
     const {token} = req.body;
     console.log('---------------------');
@@ -82,8 +70,9 @@ router.post('/login', async (req: Request, res: Response) => {
         }
 
         // create jwt token
-        const jwtToken = jwt.sign({user_id: curr_user_id, user_email: curr_user_email}, "my_secret_key_6457962398756294386");
-
+        const jwtToken = jwt.sign({user_id: curr_user_id, user_email: curr_user_email}, process.env.JWT_KEY);
+        console.log("JWT token generated successfully.");
+        
         res.status(res_status).json({token: jwtToken});
         
     } catch (err: any) {

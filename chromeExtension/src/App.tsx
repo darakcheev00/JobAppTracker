@@ -65,7 +65,7 @@ function App() {
 				body: JSON.stringify({ token })
 			});
 			
-			console.log(`SERVER: ${await response.json()}`);
+			console.log(`SERVER: ${JSON.stringify(await response.json())}`);
 
 			if (response.ok){
 				setAuthToken(token);
