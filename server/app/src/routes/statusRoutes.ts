@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
 import GmailService from '../utils/gmailService';
 import DatabaseService from '../utils/databaseService';
@@ -6,7 +6,7 @@ import DatabaseService from '../utils/databaseService';
 const router = express.Router();
 
 // get all status's from db (all saved)
-router.get('/:userId', async (req,res) => {
+router.get('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     try {
         const allStatusUpdates = await DatabaseService.getAllUserStatus(userId);
@@ -22,7 +22,7 @@ router.get('/:userId', async (req,res) => {
 
 
 // get new status's from db (call gpt and return new ones only)
-router.get('/new/:userId', async (req,res) => {
+router.get('/new/:userId', async (req:Request, res: Response) => {
     const userId = req.params.userId;
 
     let newestMsgDate = null;
@@ -58,7 +58,7 @@ router.get('/new/:userId', async (req,res) => {
 
 
 // get batch of status's from given start index from latest. 0 means newest -> -25, 25 means -25 -> -50 (if 25 is batch size).
-router.get('/:userId', async (req,res) => {
+router.get('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     // const start = parseInt(req.query.start as string, 10);
 

@@ -1,10 +1,6 @@
 import pool from '../db/db_config';
 
 
-const user_table_map: { [key: string]: string } = {
-    "user_email": "UserEmail",
-    "access_token": "AccessToken",
-}
 
 export default class DatabaseService {
     // ===================== Cache =====================
@@ -20,7 +16,7 @@ export default class DatabaseService {
             return result.rows;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
-            throw new Error('Internal server error');
+            throw new Error('Internal server sql error');
         }
     }
 
@@ -30,7 +26,7 @@ export default class DatabaseService {
             return result.rows.length === 0 ? null : result.rows[0];
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
-            throw new Error('Internal server error');
+            throw new Error('Internal server sql error');
         }
     }
 
@@ -40,7 +36,7 @@ export default class DatabaseService {
             return result.rows.length === 0 ? null : result.rows[0];
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
-            throw new Error('Internal server error');
+            throw new Error('Internal server sql error');
         }
     }
 
@@ -59,6 +55,11 @@ export default class DatabaseService {
 
     static async updateUserInfo(userId: any, updatedUserData: Record<string, any>) {
         try {
+            const user_table_map: { [key: string]: string } = {
+                "useremail": "UserEmail",
+                "authtoken": "AuthToken",
+            }
+
             // Build dynamic set
             const setClause = Object.keys(updatedUserData)
                 .map((key, index) => `${user_table_map[key]} = $${index + 2}`)
@@ -125,7 +126,7 @@ export default class DatabaseService {
             await pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
-            throw new Error('Internal server error');
+            throw new Error('Internal server sql error');
         }
     }
 
@@ -133,11 +134,33 @@ export default class DatabaseService {
     // Auth
     // ====================================================================================================
 
-    static async getGoogleAuthToken(userId: any) {}
-    static async setGoogleAuthToken(userId: any, token: string) {}
+    static async getGoogleAuthToken(userId: any) {
+        try {
+            const queryString = "SELECT authtoken FROM UserAccount WHERE userId = $1";
+            const result = await pool.query(queryString, [userId]);
+            return result.rows.length === 0 ? null : result.rows[0].authtoken;
+        } catch (err: any) {
+            console.error('[server]: Error setting authtoken. SQL query error: ', err);
+            throw new Error('Internal server sql error');
+        }
+    }
+
+    static async setGoogleAuthToken(userId: any, token: string) {
+        try {
+            const queryString = "UPDATE UserAccount SET AuthToken = $2 WHERE UserId = $1";
+            await pool.query(queryString, [userId, token]);
+        } catch (err: any) {
+            console.error('[server]: Error setting authtoken. SQL query error: ', err);
+            throw new Error('Internal server sql error');
+        }
+    }
     
-    static async getGPTKey(userId: any, token: string) {}
-    static async setGPTKey(userId: any, token: string) {}
+    static async getGPTKey(userId: any, token: string) {
+        console.log("getGPTKey NOT IMPLEMEMENTED");
+    }
+    static async setGPTKey(userId: any, token: string) {
+        console.log("setGPTKey NOT IMPLEMEMENTED");
+    }
 
 
 

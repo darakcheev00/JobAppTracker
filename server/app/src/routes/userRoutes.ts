@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
 import DatabaseService from '../utils/databaseService';
 
 const router = express.Router();
 
 // Get all users
-router.get('/', async (req,res) => {
+router.get('/', async (req: Request, res: Response) => {
     try{
         const users = await DatabaseService.getAllUsers();
         res.json(users);
@@ -15,7 +15,7 @@ router.get('/', async (req,res) => {
 });
 
 // Get single user
-router.get('/:userId', async (req,res)=>{
+router.get('/:userId', async (req:Request, res: Response)=>{
     const userId = req.params.userId;
     try {
         const user = await DatabaseService.getSingleUser(userId);
@@ -26,7 +26,7 @@ router.get('/:userId', async (req,res)=>{
 });
 
 // Create new user
-router.post('/', async(req,res) => {
+router.post('/', async(req: Request, res: Response) => {
     const attributes = req.body;
 
     // validate email
@@ -50,9 +50,12 @@ router.post('/', async(req,res) => {
 
 
 // Update user
-router.patch('/:userId', async (req,res) => {
+router.patch('/:userId', async (req: Request, res:Response) => {
     const userId = req.params.userId;
     const updatedUserData = req.body;
+
+    console.log('---------------------');
+    console.log(`Hit patch user endpoint: id:${userId}, new_data:${JSON.stringify(updatedUserData)}`);
 
     try {
         const userExists = await DatabaseService.userExists(userId);

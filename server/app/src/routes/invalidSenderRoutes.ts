@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
 import DatabaseService from '../utils/databaseService';
 
@@ -6,7 +6,7 @@ const router = express.Router();
 
 
 // Get all invalid sender emails
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     try {
         const senderList = await DatabaseService.getInvalidSenders(userId);
@@ -18,7 +18,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // Add new invalid email
-router.post('/:userId', async (req, res) => {
+router.post('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const body = req.body;
     try {
@@ -34,7 +34,7 @@ router.post('/:userId', async (req, res) => {
 });
 
 // Remove invalid email
-router.delete('/:userId', async (req, res) => {
+router.delete('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const body = req.body;
     try {

@@ -59,15 +59,22 @@ function App() {
 		try {
 			const response = await fetch("http://localhost:8000/auth/login", {
 				method: 'POST',
-				body: JSON.stringify({ token: token })
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ token })
 			});
+			
 			console.log(`SERVER: ${await response.json()}`);
-		} catch (err) {
-			console.error("Error sending token to the backend:", err);
-		}
 
-		setAuthToken(token);
-		setAuthenticated(true);
+			if (response.ok){
+				setAuthToken(token);
+				setAuthenticated(true);
+			}
+
+		} catch (err) {
+			console.error("Error logging in:", err);
+		}
 	};
 
 	return (
