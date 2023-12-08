@@ -25,10 +25,10 @@ router.get('/', verifyToken, async (req: AuthedRequest, res: Response) => {
 
 
 // get new status's from db (call gpt and return new ones only)
-router.get('/new', async (req:AuthedRequest, res: Response) => {
+router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
     console.log(`Hit /status/new endpoint`);
 
-    const userId = req.params.userId;
+    const userId = req.user_id;
 
     let newestMsgDate = null;
 

@@ -17,6 +17,7 @@ function App() {
 	const [authenticated, setAuthenticated] = useState<boolean | undefined>();
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
+	const [jwt, setJWT] = useState<string | undefined>("def");
 
 	// const [gptKey, setGptKey] = useState<string | undefined>('***');
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
@@ -35,6 +36,7 @@ function App() {
 			if (isAuthed) {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
+				setJWT(await StorageManager.getJWT());
 			}
 
 			// setInvalidEmails(await StorageManager.getInvalidEmails());
@@ -64,12 +66,16 @@ function App() {
 				},
 				body: JSON.stringify({ token })
 			});
-			
-			console.log(`SERVER: ${JSON.stringify(await response.json())}`);
+			const data = await response.json();
+			console.log(`SERVER: ${JSON.stringify(data)}`);
 
-			if (response.ok){
+			// response can be 200 updated token, 201 created user, 401 unauthed, 500 error
+			if (response.status === 200 || response.status === 201){
 				setAuthToken(token);
 				setAuthenticated(true);
+
+				setJWT(data.token);
+				StorageManager.setJWT(data.token);
 			}
 
 		} catch (err) {

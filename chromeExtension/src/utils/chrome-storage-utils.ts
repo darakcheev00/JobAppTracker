@@ -106,6 +106,18 @@ export default class StorageManager {
         });
     }
 
+    static setJWT = async (token: string) => {
+        await chrome.storage.local.set({ jwt: token }, () => {
+            console.log(`JWT stored`);
+        });
+    };
+
+    static getJWT = async () => {
+        const data = await chrome.storage.local.get('jwt');
+        console.log(`Retrieved jwt from chrome storage.`);
+        return data.jwt;
+    };
+
     static setGptKey = async (key: string) => {
         await chrome.storage.local.set({ gptKey: key }, () => {
             console.log(`Gpt key stored`);
