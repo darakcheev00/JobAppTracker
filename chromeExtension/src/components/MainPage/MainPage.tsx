@@ -4,7 +4,7 @@ import AppsChart from './AppsChart';
 import GptManager from '../../utils/gptmodule';
 import StorageManager, { Message } from '../../utils/chrome-storage-utils';
 import AuthManager from '../../utils/auth';
-import GmailApiManager from '../../utils/gmailApiService';
+import GoogleApiManager from '../../utils/gmailApiService';
 
 
 import './MainPage.scss';
@@ -18,6 +18,8 @@ type MainPageProps = {
     tableData: Message[] | undefined;
     setTableData: (key: Message[] | undefined) => void;
     showChart: boolean;
+    jwt: string | undefined;
+    setJwt: (key: string | undefined) => void;
 };
 
 interface TableCounts {
@@ -48,14 +50,16 @@ const statusDisplayNames: { [key: string]: string } = {
     "invited to apply": "Invited to apply"
 }
 
-export default function MainPage({ 
+export default function MainPage({
     authToken,
     setAuthToken,
     gptKeyValid,
     setGptKeyValid,
     tableData,
     setTableData,
-    showChart }: MainPageProps) {
+    showChart,
+    jwt,
+    setJwt }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
@@ -99,16 +103,60 @@ export default function MainPage({
         //     return;
         // }
 
-        if (!await GmailApiManager.healthCheck(authToken)) {
-            const gmailToken = await AuthManager.authenticate();
-            setAuthToken(gmailToken);
-            // TODO: call backend endpoint to set new auth token
-            
+        if (!await GoogleApiManager.authTokenCheck(authToken)) {
+            const newAuthToken = await AuthManager.authenticate();
+            setAuthToken(newAuthToken);
+
+            try {
+                const response = await fetch("http://localhost:8000/auth/login", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ newAuthToken })
+                });
+                const data = await response.json();
+                console.log(`SERVER: ${JSON.stringify(data)}`);
+
+                if (response.ok) {
+                    setJwt(data.token);
+                    StorageManager.setJwt(data.token);
+                }else{
+                    throw new Error("Failed re-login");
+                }
+            } catch (err: any) {
+                console.error("Error logging in:", err.message);
+                return;
+            }
         }
 
-        const validMessages: Message[] = [];
-            // await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
         
+        console.log('calling GET http://localhost:8000/status/new');
+
+        try {
+            const response = await fetch("http://localhost:8000/status/new", {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${jwt}`
+                }
+            });
+            const data = await response.json();
+            // console.log(`received new app status's ${data}`);
+
+            if (!response.ok) {
+                throw new Error(`response status: ${data}`);
+            }
+        } catch (err: any) {
+            console.error("Error getting new application status's:", err.message);
+            return;
+        }
+
+        // TODO: do something with data rows
+
+
+        const validMessages: Message[] = [];
+        // await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
+
         console.log("Messages: ", validMessages);
 
         // append to existing messages
@@ -164,24 +212,24 @@ export default function MainPage({
         }))
     }
 
-    const handleDelete = async(rowId: number) => {
+    const handleDelete = async (rowId: number) => {
         // Filter out the row to be deleted based on its unique identifier
         const updatedTableData = displayedTableData?.filter(item => item.id !== rowId);
         setDisplayedTableData(updatedTableData);
         setTableData(updatedTableData);
-        
-        if (updatedTableData){
+
+        if (updatedTableData) {
             await StorageManager.overrideTableData(updatedTableData);
-        }else{
+        } else {
             await StorageManager.overrideTableData([]);
         }
     };
 
     return (
         <div>
-            {!gptKeyValid && <GptForm {...{setGptKeyValid,setRefreshMsg}}/>}
+            {!gptKeyValid && <GptForm {...{ setGptKeyValid, setRefreshMsg }} />}
 
-            {showChart && tableData && <AppsChart {...{tableData, dataFilter}}/>}
+            {showChart && tableData && <AppsChart {...{ tableData, dataFilter }} />}
 
             <div className="table-counts">
                 <button onClick={filterAll}>All</button>

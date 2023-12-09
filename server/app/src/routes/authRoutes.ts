@@ -4,9 +4,9 @@ var jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
-export const validateToken = async (token:string) => {
+export const validateToken = async (token: string) => {
     try {
-        const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`,{
+        const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`, {
             method: 'GET'
         });
         const data = await response.json();
@@ -23,18 +23,18 @@ export const validateToken = async (token:string) => {
 }
 
 router.post('/login', async (req: Request, res: Response) => {
-    const {token} = req.body;
+    const { token } = req.body;
     console.log('---------------------');
-    console.log(`Hit login endpoint with token: ${!token ? token : token.substring(0,25)}...`);
+    console.log(`Hit login endpoint with token: ${!token ? token : token.substring(0, 25)}...`);
 
     // Validate token
-    var data: Record<string,any>;
+    var data: Record<string, any>;
     try {
         data = await validateToken(token);
     } catch (error) {
         return res.status(401).json("token is invalid");
     }
-    
+
     const given_user_email = data.email;
 
     let res_status = 500;
@@ -70,13 +70,18 @@ router.post('/login', async (req: Request, res: Response) => {
         }
 
         // create jwt token
-        const jwtToken = jwt.sign({user_id: curr_user_id, user_email: curr_user_email}, process.env.JWT_KEY);
+        const jwtToken = jwt.sign(
+            { user_id: curr_user_id, user_email: curr_user_email },
+            process.env.JWT_KEY,
+            { expiresIn: '2h' }
+        );
+
         console.log("JWT token generated successfully.");
-        
-        res.status(res_status).json({token: jwtToken});
-        
+
+        res.status(res_status).json({ token: jwtToken });
+
     } catch (err: any) {
-        return res.status(500).json({error: err.message});
+        return res.status(500).json({ error: err.message });
     }
 });
 

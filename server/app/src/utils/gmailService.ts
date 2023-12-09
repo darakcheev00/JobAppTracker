@@ -28,11 +28,12 @@ export default class GmailService {
     }
 
     static processInbox = async (token: string | undefined, newestMsgDate: number, gptKey: string | undefined, invalidSenders: Set<string>) => {
-        const gmailQuery = `in:inbox category:primary after:${newestMsgDate / 1000}`;
+        // const gmailQuery = `in:inbox category:primary after:${newestMsgDate / 1000}`;
+        const gmailQuery = `in:inbox category:primary`;
         console.log(`query: ${gmailQuery}`);
 
         try {
-            const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10000&q=${gmailQuery}`, {
+            const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${gmailQuery}`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token}`

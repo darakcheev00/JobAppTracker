@@ -17,7 +17,7 @@ function App() {
 	const [authenticated, setAuthenticated] = useState<boolean | undefined>();
 	const [loading, setLoading] = useState(true);
 	const [authToken, setAuthToken] = useState<string | undefined>("def");
-	const [jwt, setJWT] = useState<string | undefined>("def");
+	const [jwt, setJwt] = useState<string | undefined>("def");
 
 	// const [gptKey, setGptKey] = useState<string | undefined>('***');
 	const [gptKeyValid, setGptKeyValid] = useState<boolean | undefined>(true);
@@ -36,7 +36,7 @@ function App() {
 			if (isAuthed) {
 				console.log("Init. Already authed");
 				setAuthToken(tokenObj.token);
-				setJWT(await StorageManager.getJWT());
+				setJwt(await StorageManager.getJwt());
 			}
 
 			// setInvalidEmails(await StorageManager.getInvalidEmails());
@@ -74,8 +74,8 @@ function App() {
 				setAuthToken(token);
 				setAuthenticated(true);
 
-				setJWT(data.token);
-				StorageManager.setJWT(data.token);
+				setJwt(data.token);
+				StorageManager.setJwt(data.token);
 			}
 
 		} catch (err) {
@@ -110,7 +110,9 @@ function App() {
 							setGptKeyValid,
 							tableData,
 							setTableData,
-							showChart
+							showChart,
+							jwt,
+							setJwt
 						}} />
 					)}
 				</div>

@@ -42,11 +42,11 @@ router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
     // TODO check if invalidSenderList type is valid
     const invalidSenderList = await DatabaseService.getInvalidSenders(userId);
 
-    const googleAuthToken = "ya29.a0AfB_byDBUWgqcrzaDr1zIMfT7bdM62HgViyKB8a9B3mKHCJSuvqG7-xTEBgngyrvJEqPycOPWUF0oXWGEKPjWWAunvd0LnNN4XZVfcMVrAPT6eQxTpnoXrGbEs9Ldf_N_ji94doTlo967vNw8LGAp62pfRak3WmVcgaCgYKASMSARISFQHGX2MiC3x_mrS7ntow1vUNi4Y4Rw0169";
+    const googleAuthToken = await DatabaseService.getGoogleAuthToken(userId);
     const gptKey = "574839";
     
     // call gmail service
-    const {} = GmailService.processInbox(googleAuthToken, newestMsgDate, gptKey, invalidSenderList);
+    const {} = await GmailService.processInbox(googleAuthToken, newestMsgDate, gptKey, invalidSenderList);
         // get new emails
 
         // filter
@@ -58,7 +58,9 @@ router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
     // save to db
 
     // return
-     
+    console.log(`-------------------------`);
+    res.status(500).json('EMAIL PROCESSING NOT FIXED YET');
+
 });
 
 

@@ -1,0 +1,13 @@
+
+// starts up the database container in the background
+docker compose -f docker-compose-db.yaml up -d
+docker compose -f docker-compose-db.yamk down
+
+// starts up the server in the foreground (dont have to pass in the file name because its the default name 'docker-compose.yaml')
+docker compose up
+docker compose down
+
+// if you need to rebuild the image manually before docker compose up then slap on a 'build'
+docker compose build
+
+

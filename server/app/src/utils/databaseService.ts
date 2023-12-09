@@ -87,6 +87,34 @@ export default class DatabaseService {
         }
     }
 
+    static async getGoogleAuthToken(userId: any) {
+        try {
+            const queryString = "SELECT authtoken FROM UserAccount WHERE userId = $1";
+            const result = await pool.query(queryString, [userId]);
+            return result.rows.length === 0 ? null : result.rows[0].authtoken;
+        } catch (err: any) {
+            console.error('[server]: Error setting authtoken. SQL query error: ', err);
+            throw new Error('Internal server sql error');
+        }
+    }
+
+    static async setGoogleAuthToken(userId: any, token: string) {
+        try {
+            const queryString = "UPDATE UserAccount SET AuthToken = $2 WHERE UserId = $1";
+            await pool.query(queryString, [userId, token]);
+        } catch (err: any) {
+            console.error('[server]: Error setting authtoken. SQL query error: ', err);
+            throw new Error('Internal server sql error');
+        }
+    }
+    
+    static async getGPTKey(userId: any, token: string) {
+        console.log("getGPTKey NOT IMPLEMEMENTED");
+    }
+    static async setGPTKey(userId: any, token: string) {
+        console.log("setGPTKey NOT IMPLEMEMENTED");
+    }
+
     // ====================================================================================================
     // Invalid Sender
     // ====================================================================================================
@@ -129,39 +157,6 @@ export default class DatabaseService {
             throw new Error('Internal server sql error');
         }
     }
-
-    // ====================================================================================================
-    // Auth
-    // ====================================================================================================
-
-    static async getGoogleAuthToken(userId: any) {
-        try {
-            const queryString = "SELECT authtoken FROM UserAccount WHERE userId = $1";
-            const result = await pool.query(queryString, [userId]);
-            return result.rows.length === 0 ? null : result.rows[0].authtoken;
-        } catch (err: any) {
-            console.error('[server]: Error setting authtoken. SQL query error: ', err);
-            throw new Error('Internal server sql error');
-        }
-    }
-
-    static async setGoogleAuthToken(userId: any, token: string) {
-        try {
-            const queryString = "UPDATE UserAccount SET AuthToken = $2 WHERE UserId = $1";
-            await pool.query(queryString, [userId, token]);
-        } catch (err: any) {
-            console.error('[server]: Error setting authtoken. SQL query error: ', err);
-            throw new Error('Internal server sql error');
-        }
-    }
-    
-    static async getGPTKey(userId: any, token: string) {
-        console.log("getGPTKey NOT IMPLEMEMENTED");
-    }
-    static async setGPTKey(userId: any, token: string) {
-        console.log("setGPTKey NOT IMPLEMEMENTED");
-    }
-
 
 
     // ====================================================================================================
