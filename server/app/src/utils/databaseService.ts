@@ -107,12 +107,40 @@ export default class DatabaseService {
             throw new Error('Internal server sql error');
         }
     }
-    
-    static async getGPTKey(userId: any, token: string) {
-        console.log("getGPTKey NOT IMPLEMEMENTED");
+
+    static async getGPTKey(userId: any) {
+        try {
+            const queryString = "SELECT gptkey FROM UserAccount WHERE UserId = $1";
+            const result = await pool.query(queryString, [userId]);
+            return result.rows.length === 0 ? null : result.rows[0].authtoken;
+        } catch (err: any) {
+            console.error(`[server]: Error getting gpt key. SQL query error: ${err}`);
+            throw new Error('Interval server sql error');
+        }
     }
     static async setGPTKey(userId: any, token: string) {
-        console.log("setGPTKey NOT IMPLEMEMENTED");
+        try {
+            const queryString = "UPDATE UserAccount SET GptKey = #2 WHERE UserId = $1";
+            await pool.query(queryString, [userId, token])
+        } catch (err: any) {
+            console.error(`[server]: Error setting gpt key. SQL query error: ${err}`);
+            throw new Error('Internal server sql error');
+        }
+    }
+
+    static async getGPTKeyAndToken(userId: any){ 
+        try {
+            const queryString = "SELECT gptkey, authtoken FROM UserAccount WHERE UserId = $1";
+            const result = await pool.query(queryString, [userId]);
+            if (result.rows.length === 0) throw new Error("No record for userId");
+            return {
+                gptKey: result.rows[0].gptkey,
+                googleAuthToken: result.rows[0].authtoken,
+            };
+        } catch (err: any) {
+            console.error(`[server]: Error getting gpt key and auth token. SQL query error: ${err}`);
+            throw new Error('Internal server sql error');
+        }   
     }
 
     // ====================================================================================================

@@ -9,6 +9,7 @@ import GoogleApiManager from '../../utils/gmailApiService';
 
 import './MainPage.scss';
 import { serialize } from 'v8';
+import { isVariableDeclaration } from 'typescript';
 
 type MainPageProps = {
     authToken: string | undefined;
@@ -121,6 +122,7 @@ export default function MainPage({
                 if (response.ok) {
                     setJwt(data.token);
                     StorageManager.setJwt(data.token);
+                    console.log("On refresh: Authtoken updated, new jwt received.");
                 }else{
                     throw new Error("Failed re-login");
                 }
@@ -132,7 +134,6 @@ export default function MainPage({
 
         
         console.log('calling GET http://localhost:8000/status/new');
-
         try {
             const response = await fetch("http://localhost:8000/status/new", {
                 method: 'GET',
@@ -140,8 +141,8 @@ export default function MainPage({
                     Authorization: `Bearer ${jwt}`
                 }
             });
-            const data = await response.json();
-            // console.log(`received new app status's ${data}`);
+            var data = await response.json();
+            console.log(`received new app status's ${data}`);
 
             if (!response.ok) {
                 throw new Error(`response status: ${data}`);
@@ -152,6 +153,7 @@ export default function MainPage({
         }
 
         // TODO: do something with data rows
+        console.log(data);
 
 
         const validMessages: Message[] = [];

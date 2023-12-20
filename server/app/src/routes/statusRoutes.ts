@@ -41,9 +41,7 @@ router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
 
     // TODO check if invalidSenderList type is valid
     const invalidSenderList = await DatabaseService.getInvalidSenders(userId);
-
-    const googleAuthToken = await DatabaseService.getGoogleAuthToken(userId);
-    const gptKey = "574839";
+    const {gptKey, googleAuthToken} = await DatabaseService.getGPTKeyAndToken(userId);
     
     // call gmail service
     const {} = await GmailService.processInbox(googleAuthToken, newestMsgDate, gptKey, invalidSenderList);

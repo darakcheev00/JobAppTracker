@@ -70,7 +70,7 @@ function App() {
 			console.log(`SERVER: ${JSON.stringify(data)}`);
 
 			// response can be 200 updated token, 201 created user, 401 unauthed, 500 error
-			if (response.status === 200 || response.status === 201){
+			if (response.status === 200 || response.status === 201) {
 				setAuthToken(token);
 				setAuthenticated(true);
 
