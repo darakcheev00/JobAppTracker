@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS Job
 CREATE TABLE IF NOT EXISTS StatusType
 (
     StatusId        SERIAL          PRIMARY KEY,
-    StatusName      VARCHAR(255)    NOT NULL
+    StatusName      VARCHAR(255)    NOT NULL,
+    GptSearchName   VARCHAR(255)    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS AppStatus

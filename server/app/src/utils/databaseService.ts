@@ -1,8 +1,26 @@
-import pool from '../db/db_config';
+import { query } from 'express';
+import pgPromise from 'pg-promise';
+const pgp = pgPromise();
 
-
+const { Pool } = require('pg');
 
 export default class DatabaseService {
+    private pool: any;
+    private pgp_pool: pgPromise.IDatabase<any>;
+
+    private connection = {
+        user: 'daniel_dev',
+        password: 'changeme',
+        host: 'postgres',
+        database: 'daniel_dev',
+        port: 5432
+    };
+
+    constructor() {
+        this.pool = new Pool(this.connection);
+        this.pgp_pool = pgp(this.connection);
+    }
+
     // ===================== Cache =====================
     // private static invalidSenderCache: Record<string,any> = {};
 
@@ -10,9 +28,29 @@ export default class DatabaseService {
     // User
     // ====================================================================================================
 
-    static async getAllUsers() {
+    async connect() {
         try {
-            const result = await pool.query("SELECT * FROM UserAccount");
+            await this.pool.connect();
+            console.log("[server]: Connected to the database")
+        } catch (err: any) {
+            throw new Error();
+        }
+    }
+
+    close() {
+        try {
+            this.pool.end();
+            console.log("[server]: Database connection closed.");
+            process.exit(0);
+
+        } catch (err: any) {
+            throw new Error();
+        }
+    }
+
+    async getAllUsers() {
+        try {
+            const result = await this.pool.query("SELECT * FROM UserAccount");
             return result.rows;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -20,9 +58,9 @@ export default class DatabaseService {
         }
     }
 
-    static async getSingleUser(userId: any) {
+    async getSingleUser(userId: any) {
         try {
-            const result = await pool.query("SELECT * FROM UserAccount WHERE UserId = $1", [userId]);
+            const result = await this.pool.query("SELECT * FROM UserAccount WHERE UserId = $1", [userId]);
             return result.rows.length === 0 ? null : result.rows[0];
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -30,9 +68,9 @@ export default class DatabaseService {
         }
     }
 
-    static async getSingleUserByEmail(email: string) {
+    async getSingleUserByEmail(email: string) {
         try {
-            const result = await pool.query("SELECT * FROM UserAccount WHERE useremail = $1", [email]);
+            const result = await this.pool.query("SELECT * FROM UserAccount WHERE useremail = $1", [email]);
             return result.rows.length === 0 ? null : result.rows[0];
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -40,9 +78,9 @@ export default class DatabaseService {
         }
     }
 
-    static async addNewUser(attributes: Record<string, any>) {
+    async addNewUser(attributes: Record<string, any>) {
         try {
-            const result = await pool.query(
+            const result = await this.pool.query(
                 'INSERT INTO UserAccount (UserEmail, AuthToken) VALUES ($1, $2) RETURNING *',
                 [attributes.user_email, attributes.auth_token]
             );
@@ -53,7 +91,7 @@ export default class DatabaseService {
         }
     }
 
-    static async updateUserInfo(userId: any, updatedUserData: Record<string, any>) {
+    async updateUserInfo(userId: any, updatedUserData: Record<string, any>) {
         try {
             const user_table_map: { [key: string]: string } = {
                 "useremail": "UserEmail",
@@ -69,7 +107,7 @@ export default class DatabaseService {
             const queryString = `UPDATE UserAccount SET ${setClause} WHERE UserId = $1 RETURNING *`;
 
             // Execute query
-            const result = await pool.query(queryString, [userId, ...Object.values(updatedUserData)]);
+            const result = await this.pool.query(queryString, [userId, ...Object.values(updatedUserData)]);
             return result.rows[0];
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -77,9 +115,9 @@ export default class DatabaseService {
         }
     }
 
-    static async userExists(userId: any) {
+    async userExists(userId: any) {
         try {
-            const result = await pool.query("SELECT * FROM UserAccount WHERE UserId = $1", [userId]);
+            const result = await this.pool.query("SELECT * FROM UserAccount WHERE UserId = $1", [userId]);
             return result.rows.length !== 0;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -87,10 +125,10 @@ export default class DatabaseService {
         }
     }
 
-    static async getGoogleAuthToken(userId: any) {
+    async getGoogleAuthToken(userId: any) {
         try {
             const queryString = "SELECT authtoken FROM UserAccount WHERE userId = $1";
-            const result = await pool.query(queryString, [userId]);
+            const result = await this.pool.query(queryString, [userId]);
             return result.rows.length === 0 ? null : result.rows[0].authtoken;
         } catch (err: any) {
             console.error('[server]: Error setting authtoken. SQL query error: ', err);
@@ -98,68 +136,112 @@ export default class DatabaseService {
         }
     }
 
-    static async setGoogleAuthToken(userId: any, token: string) {
+    async setGoogleAuthToken(userId: any, token: string) {
         try {
             const queryString = "UPDATE UserAccount SET AuthToken = $2 WHERE UserId = $1";
-            await pool.query(queryString, [userId, token]);
+            await this.pool.query(queryString, [userId, token]);
         } catch (err: any) {
             console.error('[server]: Error setting authtoken. SQL query error: ', err);
             throw new Error('Internal server sql error');
         }
     }
 
-    static async getGPTKey(userId: any) {
+    async getGPTKey(userId: any) {
         try {
             const queryString = "SELECT gptkey FROM UserAccount WHERE UserId = $1";
-            const result = await pool.query(queryString, [userId]);
+            const result = await this.pool.query(queryString, [userId]);
             return result.rows.length === 0 ? null : result.rows[0].authtoken;
         } catch (err: any) {
             console.error(`[server]: Error getting gpt key. SQL query error: ${err}`);
             throw new Error('Interval server sql error');
         }
     }
-    static async setGPTKey(userId: any, token: string) {
+    async setGPTKey(userId: any, token: string) {
         try {
             const queryString = "UPDATE UserAccount SET GptKey = #2 WHERE UserId = $1";
-            await pool.query(queryString, [userId, token])
+            await this.pool.query(queryString, [userId, token])
         } catch (err: any) {
             console.error(`[server]: Error setting gpt key. SQL query error: ${err}`);
             throw new Error('Internal server sql error');
         }
     }
 
-    static async getGPTKeyAndToken(userId: any){ 
+    async get_GPTKey_Token_Date(userId: any) {
         try {
-            const queryString = "SELECT gptkey, authtoken FROM UserAccount WHERE UserId = $1";
-            const result = await pool.query(queryString, [userId]);
+            const queryString = "SELECT gptkey, authtoken, EXTRACT(EPOCH FROM newestmsgdate) as unix_timestamp FROM UserAccount WHERE UserId = $1";
+            const result = await this.pool.query(queryString, [userId]);
             if (result.rows.length === 0) throw new Error("No record for userId");
             return {
-                gptKey: result.rows[0].gptkey,
-                googleAuthToken: result.rows[0].authtoken,
+                gpt_key: result.rows[0].gptkey,
+                auth_token: result.rows[0].authtoken,
+                newest_msg_date: result.rows[0].unix_timestamp,
             };
         } catch (err: any) {
             console.error(`[server]: Error getting gpt key and auth token. SQL query error: ${err}`);
             throw new Error('Internal server sql error');
-        }   
+        }
+    }
+
+    async getNewestMsgDate(userId: string) {
+        try {
+            const queryString = "SELECT newestmsgdate FROM UserAccount WHERE UserId = $1";
+            const result = await this.pool.query(queryString, [userId]);
+            return result.rows.length === 0 ? null : result.rows[0].newestmsgdate;
+        } catch (err: any) {
+            console.error(`[server]: Error setting newest message data. SQL query error: ${err}`);
+            throw new Error('Internal server sql error');
+        }
+    }
+
+    async setNewestMsgDate(userId: string, date: number) {
+        try {
+            const queryString = "UPDATE UserAccount SET newestmsgdate = TO_TIMESTAMP($2) WHERE UserId = $1";
+            await this.pool.query(queryString, [userId, date]);
+        } catch (err: any) {
+            console.error(`[server]: Error setting newest message data. SQL query error: ${err}`);
+            throw new Error('Internal server sql error');
+        }
     }
 
     // ====================================================================================================
     // Invalid Sender
     // ====================================================================================================
 
-    static async getInvalidSenders(userId: any) {
+    async getInvalidSenders(userId: any): Promise<Set<string>> {
         try {
-            const result = await pool.query("SELECT EmailAddress FROM InvalidSender WHERE UserId = $1", [userId]);
-            return result.rows;
+            const result = await this.pool.query("SELECT EmailAddress FROM InvalidSender WHERE UserId = $1", [userId]);
+            const senders: Set<string> = new Set();
+            for (const row of result) {
+                senders.add(row.EmailAddress);
+            }
+            return senders;
         } catch (err) {
-            console.error('[server]: Error getting user details. SQL query error: ', err);
+            console.error('[server]: Error getting invalid senders. SQL query error: ', err);
             throw new Error('Internal server error');
         }
     }
 
-    static async senderExists(userId: any, email_address: string) {
+    async addNewInvalidEmails(userId: any, senderList: string[]) {
+        // convert input to rows to insert
+        const dataToInsert = senderList.map(email => { 
+            return {
+                'userid': userId, 
+                'emailaddress': email 
+            } 
+        });
+
         try {
-            const result = await pool.query("SELECT * FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
+            const insertStatement = pgp.helpers.insert(dataToInsert, ['userid', 'emailaddress'], 'invalidsender');
+            await this.pgp_pool.none(insertStatement);
+        } catch (err) {
+            console.error('[server]: Error adding new invalid senders. SQL query error: ', err);
+            throw new Error('Internal server error');
+        }
+    }
+
+    async senderExists(userId: any, email_address: string) {
+        try {
+            const result = await this.pool.query("SELECT * FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
             return result.rows.length !== 0;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -167,9 +249,9 @@ export default class DatabaseService {
         }
     }
 
-    static async addNewInvalidSender(userId: any, email_address: string) {
+    async addNewInvalidSender(userId: any, email_address: string) {
         try {
-            const result = await pool.query("INSERT INTO InvalidSender (UserId, EmailAddress) VALUES ($1, $2) RETURNING *", [userId, email_address]);
+            const result = await this.pool.query("INSERT INTO InvalidSender (UserId, EmailAddress) VALUES ($1, $2) RETURNING *", [userId, email_address]);
             return result.rows.length !== 0;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -177,9 +259,9 @@ export default class DatabaseService {
         }
     }
 
-    static async deleteInvalidSender(userId: any, email_address: string) {
+    async deleteInvalidSender(userId: any, email_address: string) {
         try {
-            await pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
+            await this.pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
             throw new Error('Internal server sql error');
@@ -191,9 +273,9 @@ export default class DatabaseService {
     // AppStatus
     // ====================================================================================================
 
-    static async getAllUserStatus(userId: any) {
+    async getAllUserStatus(userId: any) {
         try {
-            const result = await pool.query(`
+            const result = await this.pool.query(`
                 SELECT 
                     selected.JobId,
                     selected.date,
@@ -222,9 +304,9 @@ export default class DatabaseService {
         }
     }
 
-    static async getLatestStatusDate(userId: any) {
+    async getLatestStatusDate(userId: any) {
         try {
-            const result = await pool.query("SELECT date FROM AppStatus WHERE UserId = $1 ORDER BY date LIMIT 1", [userId]);
+            const result = await this.pool.query("SELECT date FROM AppStatus WHERE UserId = $1 ORDER BY date LIMIT 1", [userId]);
             return result.rows;
         } catch (err) {
             console.error('[server]: Error getting user details. SQL query error: ', err);
@@ -232,10 +314,40 @@ export default class DatabaseService {
         }
     }
 
+    async getStatusTypes() {
+        try {
+            const result = await this.pool.query("SELECT StatusId, StatusName, GptSearchName FROM StatusType");
+            var gptStatusMapping: Record<string, number> = {};
+            var displayNameMapping: Record<number, string> = {};
+            for (const row of result.rows) {
+                gptStatusMapping[row.gptsearchname] = row.statusid;
+                displayNameMapping[row.statusid] = row.statusname;
+            }
+            console.log(displayNameMapping)
+
+            return { gptStatusMapping, displayNameMapping };
+        } catch (err: any) {
+            console.error('[server]: Error getting status types. SQL query error: ', err);
+            throw new Error('Internal server error');
+        }
+    }
 
 
+    async addNewStatuses(userId: any, messages: any){
+        // convert input to rows to insert
+        
 
 
+        const dataToInsert: any = [];
+
+        try {
+            const insertStatement = pgp.helpers.insert(dataToInsert, ['userid', 'emailaddress'], 'invalidsender');
+            await this.pgp_pool.none(insertStatement);
+        } catch (err) {
+            console.error('[server]: Error adding new invalid senders. SQL query error: ', err);
+            throw new Error('Internal server error');
+        }
+    }
 
 }
 

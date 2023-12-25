@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import pool from '../db/db_config';
-import DatabaseService from '../utils/databaseService';
 import { AuthedRequest, verifyToken } from '../utils/jwtService';
+
+import { db } from '../index';
 
 const router = express.Router();
 
@@ -10,12 +11,13 @@ router.get('/', async (req: Request, res: Response) => {
     console.log(`Hit /user endpoint`);
 
     try {
-        const users = await DatabaseService.getAllUsers();
+        const users = await db.getAllUsers();
         res.json(users);
     } catch (error: any) {
         res.status(500).json(error.message);
     }
 });
+
 
 // Get single user
 router.get('/single', verifyToken, async (req: AuthedRequest, res: Response) => {
@@ -24,7 +26,7 @@ router.get('/single', verifyToken, async (req: AuthedRequest, res: Response) => 
     const userId = req.user_id;
 
     try {
-        const user = await DatabaseService.getSingleUser(userId);
+        const user = await db.getSingleUser(userId);
         res.json(user);
     } catch (error: any) {
         res.status(500).json(error.message);
@@ -46,7 +48,7 @@ router.get('/single', verifyToken, async (req: AuthedRequest, res: Response) => 
 //     }
 
 //     try {
-//         const newUser = await DatabaseService.addNewUser(attributes);
+//         const newUser = await db.addNewUser(attributes);
 //         res.status(201).json(newUser);
 //     } catch (error: any) {
 //         res.status(500).json(error.message);
@@ -64,12 +66,12 @@ router.patch('/:userId', async (req: Request, res: Response) => {
     console.log(`Hit patch user endpoint: id:${userId}, new_data:${JSON.stringify(updatedUserData)}`);
 
     try {
-        const userExists = await DatabaseService.userExists(userId);
+        const userExists = await db.userExists(userId);
         if (!userExists) {
             return res.status(404).json({ error: 'user not found' });
         }
 
-        const updatedUserInfo = await DatabaseService.updateUserInfo(userId, updatedUserData);
+        const updatedUserInfo = await db.updateUserInfo(userId, updatedUserData);
         res.json(updatedUserInfo);
     } catch (err) {
         console.error("[server]: error adding user. SQL query error: ", err);

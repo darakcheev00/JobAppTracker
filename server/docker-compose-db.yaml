@@ -16,6 +16,8 @@ services:
 
   pgadmin-compose:
     image: dpage/pgadmin4
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: "test@gmail.com"
       PGADMIN_DEFAULT_PASSWORD: "test123!"

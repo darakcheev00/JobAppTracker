@@ -175,7 +175,7 @@ export default function MainPage({ authToken,
     useEffect(() => {
         console.log(searchTerm);
         if (searchTerm !== undefined && searchTerm !== "") {
-            setDisplayedTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1));
+            setDisplayedTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().includes(searchTerm.toLowerCase())));
         } else {
             setDisplayedTableData(tableData);
         }

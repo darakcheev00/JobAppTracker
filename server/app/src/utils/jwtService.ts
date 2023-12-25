@@ -13,7 +13,7 @@ export const verifyToken = (req: AuthedRequest, res: Response, next: any) => {
         const bearer = bearerHeader.split(" ");
 
         if (bearer.length < 2){
-            res.sendStatus(403).json({
+            res.status(403).json({
                 success:false,
                 message:'Unauthorized - no token'
             });
@@ -33,13 +33,13 @@ export const verifyToken = (req: AuthedRequest, res: Response, next: any) => {
                 msg = "token expired";
             }
 
-            return res.sendStatus(403).send({
+            return res.status(403).json({
                 success:false,
                 message: msg
             });
         }
     } else {
-        res.sendStatus(403).json({
+        res.status(403).json({
             success:false,
             message:'Unauthorized - invalid token'
         });

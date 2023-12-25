@@ -1,5 +1,6 @@
 import { decode } from './base64';
-import GptManager from './gptmodule';
+import GptManager from './gptService';
+
 
 export default class EmailParser {
 
@@ -39,8 +40,8 @@ export default class EmailParser {
 			var children = span.querySelectorAll('*');
 			for (var i = 0; i < children.length; i++) {
 				if (children[i].textContent
-					&& children[i].textContent?.indexOf('@import') === -1
-					&& children[i].textContent?.indexOf('@media') === -1) {
+					&& children[i].textContent?.includes('@import')
+					&& children[i].textContent?.includes('@media')) {
 					children[i].textContent += ' ';
 				} else {
 					children[i].textContent = '';
@@ -51,62 +52,48 @@ export default class EmailParser {
 		return [span.textContent || span.innerText].toString().replace(/ +/g, ' ').replace(/^\s*[\r\n]/gm, '');
 	};
 
-	static invalid_senders = ['linkedin.com', '@remotemore.com', '@eg.vrbo.com', '@send.grammarly.com', '@mailtrack.io',
-		'@weworkremotely.com', 'getpocket_com,', 'spotangels', 'silkandsnow.com', '@github.com',
-		'order.eventbrite.com', 'invitetoapply@indeed.com', '@vailresortsmail.com', '@bowldigest.com', '@levels.fy'];
+	// static invalid_senders = ['linkedin.com', '@remotemore.com', '@eg.vrbo.com', '@send.grammarly.com', '@mailtrack.io',
+	// 	'@weworkremotely.com', 'getpocket_com,', 'spotangels', 'silkandsnow.com', '@github.com',
+	// 	'order.eventbrite.com', 'invitetoapply@indeed.com', '@vailresortsmail.com', '@bowldigest.com', '@levels.fy'];
 
 	/**
-	 * Takes a response from the Gmail API's GET message method and extracts all
+	 * Takes a full_message from the Gmail API's GET message method and extracts all
 	 * the relevant data.
-	 * @param  {object} response
+	 * @param  {object} full_message
 	 * @return {object}
 	 */
-	static parseMessage = async (response: any, gptKey: string | undefined, invalid_senders: Set<string>) => {
-		var messageObj = {
-			id: response.id,
-			snippet: response.snippet,
-			sender: "Error: Invalid Sender",
-			subject: "",
-			internalDate: 0,
-			textHtml: "",
-			textPlain: "",
-			body: "",
-			gptRes: null
-		};
+	static parseMessage = async (full_message: any, gptKey: string, invalid_senders: Set<string>) => {
+		var sender = "";
+		var subject = "";
+		var textHtml = "";
+		var textPlain = "";
 
-		// TODO: combine text into one string
-
-		if (response.internalDate) {
-			messageObj.internalDate = parseInt(response.internalDate);
-		}
-
-		var payload = response.payload;
+		var payload = full_message.payload;
 		if (!payload) {
-			return messageObj;
+			return {valid: false};
 		}
 
 		var headers = this.indexHeaders(payload.headers);
 
 		if (headers.from) {
-			messageObj.sender = headers.from;
+			sender = headers.from;
 
-			// Return if sender is in invalid sender list
-			// get cached db result
+			// Return if sender is in invalid sender list (since invalid senders are any string snippets we forloop over all snippets);
 			if (invalid_senders.size > 0) {
-				for (const invalidSnippet of invalid_senders.values()) {
-					if (invalidSnippet !== "" && messageObj.sender.indexOf(invalidSnippet) !== -1) {
-						// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
-						messageObj.sender = "Error: Invalid Sender";
-						return messageObj;
-					}
+				const invalidSnippetsArray = Array.from(invalid_senders);
+				if (invalidSnippetsArray.some(invalidSnippet => invalidSnippet !== "" && sender.includes(invalidSnippet))) {
+					// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
+					return {valid: false};
 				}
 			}
+		} else {
+			return {valid: false}
 		}
 
-		if (headers.subject) {
-			messageObj.subject = headers.subject;
+		subject = headers.subject;
+		if (!subject) {
+			return {valid: false}
 		}
-
 
 		var parts = [payload];
 		var firstPartProcessed = false;
@@ -116,6 +103,7 @@ export default class EmailParser {
 			if (part.parts) {
 				parts = parts.concat(part.parts);
 			}
+			
 			if (firstPartProcessed) {
 				headers = this.indexHeaders(part.headers);
 			}
@@ -124,29 +112,28 @@ export default class EmailParser {
 				continue;
 			}
 
-			var isHtml = part.mimeType && part.mimeType.indexOf('text/html') !== -1;
-			var isPlain = part.mimeType && part.mimeType.indexOf('text/plain') !== -1;
-			var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().indexOf('attachment') !== -1));
-
-			if (isHtml && !isAttachment) {
-				messageObj.textHtml = this.urlB64Decode(part.body.data);
-			} else if (isPlain && !isAttachment) {
-				messageObj.textPlain = this.urlB64Decode(part.body.data);
+			var isHtml = part.mimeType && part.mimeType.includes('text/html');
+			var isPlain = part.mimeType && part.mimeType.includes('text/plain');
+			var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().includes('attachment')));
+			
+			if (!isAttachment){
+				if (isHtml) {
+					textHtml = this.urlB64Decode(part.body.data);
+				} else if (isPlain) {
+					textPlain = this.urlB64Decode(part.body.data);
+				}
 			}
+			
 			firstPartProcessed = true;
 		}
 
-		if (payload.body.size > 0) {
-			messageObj.body = this.urlB64Decode(payload.body.data);
-		}
-
 		let full_text = ""
-		if (messageObj.textPlain === "") {
-			const converted_html_to_plain = this.extractContent(messageObj.textHtml, true);
+		if (textPlain === "") {
+			const converted_html_to_plain = this.extractContent(textHtml, true);
 			full_text = converted_html_to_plain;
 			// console.log(messageObj.id, converted_html_to_plain);
 		} else {
-			full_text = messageObj.textPlain;
+			full_text = textPlain;
 		}
 
 		// Remove links from text
@@ -154,42 +141,38 @@ export default class EmailParser {
 		// console.log(`!!full text has ${full_text.indexOf('http')} links`);
 
 		// call chat gpt
-		if (messageObj.sender !== "Error: Invalid Sender") {
-			let gptRes = await this.callGpt(messageObj, full_text, gptKey);
+		try{
+			var gptRes = await GptManager.callGpt(sender, subject, full_text, gptKey);
 			// if (gptRes.company === "unspecified" || gptRes.position === "unspecified"){
 			// 	console.log("running gpt once more");
 			// 	// TODO: modify prompt to say try again
 			// 	gptRes = await this.callGpt(messageObj, full_text, gptKey);
 			// }
-			messageObj.gptRes = gptRes;
+		} catch (err: any) {
+			console.error(`GptManager returned: ${err}`);
+			return {valid: false};
+		}
+
+		// check if sender is invalid by checking if status == unrelated
+		if (gptRes.status === -1){
+			return {valid: false, sender: sender}
+		}
+		
+        if (gptRes.company.includes("unspecified")){
+			return {valid: false}
 		}
 
 		const result = {
-			id: messageObj.id,
-			sender: messageObj.sender,
-			snippet: messageObj.snippet,
-			internalDate: messageObj.internalDate,
-			gptRes: messageObj.gptRes,
+			id: full_message.id,
+			valid: true,
+			sender: sender,
+			snippet: full_message.snippet,
+			internalDate: full_message.internalDate,
+			gptRes: gptRes,
 		}
 
 		return result;
 	};
 
-	static callGpt = async (messageObj: any, full_text: string, gptKey: string | undefined) => {
-		console.log("GPT called");
-		const gptRes = await GptManager.askGPt(messageObj.sender, messageObj.subject, full_text, gptKey);
-
-		// console.log("Gpt result: ",gptRes);
-
-		if (gptRes) {
-			try {
-				let jsonRes = JSON.parse(gptRes);
-				jsonRes.status.toLowerCase()
-				return jsonRes;
-			} catch (e) {
-				console.error(e, gptRes);
-				return {};
-			}
-		}
-	}
+	
 }

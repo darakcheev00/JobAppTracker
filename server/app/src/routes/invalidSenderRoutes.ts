@@ -1,16 +1,14 @@
 import express, { Request, Response } from 'express';
-import pool from '../db/db_config';
-import DatabaseService from '../utils/databaseService';
+import { db } from '../index';
 
 const router = express.Router();
-
 
 // Get all invalid sender emails
 router.get('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
     try {
-        const senderList = await DatabaseService.getInvalidSenders(userId);
-        if (senderList.length === 0) return res.status(200).json("0 saved emails.");
+        const senderList = await db.getInvalidSenders(userId);
+        if (senderList.size === 0) return res.status(200).json("0 saved emails.");
         res.json(senderList);
     } catch (error: any) {
         res.status(500).json(error.message);
@@ -23,10 +21,10 @@ router.post('/:userId', async (req: Request, res: Response) => {
     const body = req.body;
     try {
         // see if it is already saved
-        const senderExists = await DatabaseService.senderExists(userId, body.email_address);
+        const senderExists = await db.senderExists(userId, body.email_address);
         if (senderExists) return res.status(200).json("email address already saved");
 
-        const newRowInfo = await DatabaseService.addNewInvalidSender(userId, body.email_address);
+        const newRowInfo = await db.addNewInvalidSender(userId, body.email_address);
         res.json(newRowInfo);
     } catch (error: any) {
         res.status(500).json(error.message);
@@ -39,10 +37,10 @@ router.delete('/:userId', async (req: Request, res: Response) => {
     const body = req.body;
     try {
         // if address doesnt exist then no need to delete
-        const senderExists = await DatabaseService.senderExists(userId, body.email_address);
+        const senderExists = await db.senderExists(userId, body.email_address);
         if (!senderExists) return res.status(200).json("email address does not exist");
 
-        await pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, body.email_address]);
+        await db.deleteInvalidSender(userId, body.email_address);
         res.json(`Deleted address: ${body.email_address}`);
     } catch (error: any) {
         res.status(500).json(error.message);

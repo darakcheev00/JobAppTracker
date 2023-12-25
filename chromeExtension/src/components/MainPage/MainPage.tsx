@@ -5,6 +5,7 @@ import GptManager from '../../utils/gptmodule';
 import StorageManager, { Message } from '../../utils/chrome-storage-utils';
 import AuthManager from '../../utils/auth';
 import GoogleApiManager from '../../utils/gmailApiService';
+import ServerManager from '../../utils/server_manager';
 
 
 import './MainPage.scss';
@@ -98,13 +99,14 @@ export default function MainPage({
 
     const refresh = async () => {
         console.log("Refreshing...");
-        // console.log("authToken", authToken);
 
-        // if (!await GptManager.healthCheck(gptKey)) {
-        //     return;
-        // }
+        // do server health check, other wise return because we dont want to do half the work
+        if (!await ServerManager.healthCheck()){
+            return;
+        }
 
         if (!await GoogleApiManager.authTokenCheck(authToken)) {
+            
             const newAuthToken = await AuthManager.authenticate();
             setAuthToken(newAuthToken);
 
