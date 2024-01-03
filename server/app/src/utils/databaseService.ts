@@ -1,6 +1,13 @@
 import { query } from 'express';
 import pgPromise from 'pg-promise';
+import SharedDataManager from './sharedDataManager';
+const fs = require('fs');
+const path = require('path');
+
+const add_app_status_query = fs.readFileSync('/app/src/utils/insert_new_status.sql').toString();
+
 const pgp = pgPromise();
+
 
 const { Pool } = require('pg');
 
@@ -211,7 +218,7 @@ export default class DatabaseService {
         try {
             const result = await this.pool.query("SELECT EmailAddress FROM InvalidSender WHERE UserId = $1", [userId]);
             const senders: Set<string> = new Set();
-            for (const row of result) {
+            for (const row of result.rows) {
                 senders.add(row.EmailAddress);
             }
             return senders;
@@ -223,11 +230,11 @@ export default class DatabaseService {
 
     async addNewInvalidEmails(userId: any, senderList: string[]) {
         // convert input to rows to insert
-        const dataToInsert = senderList.map(email => { 
+        const dataToInsert = senderList.map(email => {
             return {
-                'userid': userId, 
-                'emailaddress': email 
-            } 
+                'userid': userId,
+                'emailaddress': email
+            }
         });
 
         try {
@@ -323,7 +330,7 @@ export default class DatabaseService {
                 gptStatusMapping[row.gptsearchname] = row.statusid;
                 displayNameMapping[row.statusid] = row.statusname;
             }
-            console.log(displayNameMapping)
+            console.log(gptStatusMapping)
 
             return { gptStatusMapping, displayNameMapping };
         } catch (err: any) {
@@ -333,21 +340,42 @@ export default class DatabaseService {
     }
 
 
-    async addNewStatuses(userId: any, messages: any){
+    async addNewStatuses(userId: any, messages: any) {
         // convert input to rows to insert
-        
+        const gptStatusMapping = SharedDataManager.getGptStatusMapping();
+
+        for (const msg of messages) {
+
+            try {
+
+                // get or create position id
+                if (!msg.gptRes.hasOwnProperty('position')) {
+                    throw new Error(`no position field`);
+                }
+
+                // get or create company id
+                if (!msg.gptRes.hasOwnProperty('company')) {
+                    throw new Error(`no company field`);
+                }
+
+                const result = await this.pool.query("CALL insert_app_status($1, $2, $3, $4, $5, $6, $7)",
+                    [
+                        msg.gptRes.position,
+                        msg.gptRes.company,
+                        userId,
+                        msg.gptRes.status,
+                        msg.internalDate/1000,
+                        msg.sender,
+                        msg.id
+                    ]
+                );
 
 
-        const dataToInsert: any = [];
-
-        try {
-            const insertStatement = pgp.helpers.insert(dataToInsert, ['userid', 'emailaddress'], 'invalidsender');
-            await this.pgp_pool.none(insertStatement);
-        } catch (err) {
-            console.error('[server]: Error adding new invalid senders. SQL query error: ', err);
-            throw new Error('Internal server error');
+            } catch (err: any) {
+                console.error(`DB: Skipping saving message due to: ${err} on msg_id: ${msg.id}`);
+                continue;
+            }   
         }
     }
-
 }
 

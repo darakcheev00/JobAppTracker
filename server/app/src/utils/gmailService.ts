@@ -52,6 +52,7 @@ export default class GmailService {
         const invalidSenderSet: Set<string> = await db.getInvalidSenders(userId);
         // TODO check if invalidSenderList type is valid make sure its a set
         var {gpt_key, auth_token, newest_msg_date} = await db.get_GPTKey_Token_Date(userId);
+        console.log(`GPTkey received: ${gpt_key}`);
         
         // TODO: if newestMsgDate is not set then get past 25
         if (newest_msg_date === undefined){
@@ -100,7 +101,7 @@ export default class GmailService {
             });
             
             const reduced_messages = await Promise.all(messagePromises);
-            console.log(`async promises completed. reduced messages: ${reduced_messages}`);
+            console.log(`async promises completed`);
 
             const valid_messages = [];
             const unrelated_messages = [];
@@ -115,7 +116,7 @@ export default class GmailService {
                     }
                 }
             }
-            console.log(`${valid_messages.length} valid, ${unrelated_messages} unrelated found.`);
+            console.log(`${valid_messages.length} valid, ${unrelated_messages.length} unrelated found.`);
             
             // check the non related to application messages and record their addresses into the invalid sender table.
             let newInvalidSendersList = [];
@@ -126,18 +127,21 @@ export default class GmailService {
                 }
             }
             // update invalid sender list in db
-            console.log("Status's saved in database");
-            await db.addNewInvalidEmails(userId, newInvalidSendersList);
+            if (newInvalidSendersList.length > 0) {
+                await db.addNewInvalidEmails(userId, newInvalidSendersList);
+                console.log("Invalid emails saved in database");
+            }
 
-            // TODO save status's in database
-            console.log("Status's saved in database");
-            await db.addNewStatuses(userId, valid_messages);
+            // save status's in database
+            if (valid_messages.length > 0) {
+                await db.addNewStatuses(userId, valid_messages);
+                console.log("Status's saved in database");
+            }
 
             return valid_messages;
 
         } catch (err) {
-            console.log(`Gmail API: Error fetching messages: ${err}`);
-            return {};
+            console.log(`Gmail service error: ${err}`);
         }
     }
 }

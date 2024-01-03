@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import pool from '../db/db_config';
 import GmailService from '../utils/gmailService';
 import { AuthedRequest, verifyToken } from '../utils/jwtService';
 import SharedDataManager from '../utils/sharedDataManager';
@@ -41,7 +40,7 @@ router.get('/types', async (req: AuthedRequest, res: Response) => {
 
 // get new status's from db (call gpt and return new ones only)
 router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
-    console.log(`Hit /status/new endpoint`);
+    console.log(`\nHit /status/new endpoint`);
 
     const userId = req.user_id;
     
@@ -52,10 +51,12 @@ router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
     
     // call gmail service
     const messages = await GmailService.processInbox(userId);
+    console.log(messages);
+    console.log(`END OF MESSAGES =======================================`)
 
     // return
     console.log(`-------------------------`);
-    res.status(500).json('EMAIL PROCESSING NOT FIXED YET');
+    res.status(200).json(messages);
 
 });
 

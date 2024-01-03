@@ -1,0 +1,8 @@
+1. get job id of curr app status
+    a. check if company exists (if not then create one)
+    b. check if position exists (if not then create one)
+    c. get or create job id based on created or retrieved company and position ids
+2. extract status from gpt message and make sure its valid
+    a. cross check with the cached statuses
+
+3. add record to table

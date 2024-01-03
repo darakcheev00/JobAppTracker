@@ -17,13 +17,13 @@ CREATE TABLE IF NOT EXISTS InvalidSender
 CREATE TABLE IF NOT EXISTS Company 
 (
     CompanyId       SERIAL          PRIMARY KEY,
-    CompanyName     VARCHAR(255)    NOT NULL
+    CompanyName     VARCHAR(255)    UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Position
 (
     PositionId      SERIAL          PRIMARY KEY,
-    PositionName    VARCHAR(255)    NOT NULL
+    PositionName    VARCHAR(255)    UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Job

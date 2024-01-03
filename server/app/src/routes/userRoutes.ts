@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import pool from '../db/db_config';
 import { AuthedRequest, verifyToken } from '../utils/jwtService';
 
 import { db } from '../index';

@@ -5,7 +5,6 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import invalidSenderRoutes from './routes/invalidSenderRoutes';
 import statusRoutes from './routes/statusRoutes';
-import DbConfig from './db/db_config';
 import DatabaseService from './utils/databaseService';
 import SharedDataManager from './utils/sharedDataManager';
 
@@ -41,7 +40,7 @@ async function startServer() {
     try {
         await db.connect();
 
-        const {gptStatusMapping,    displayNameMapping} = await db.getStatusTypes();
+        const { gptStatusMapping, displayNameMapping } = await db.getStatusTypes();
 
         // Use statusTypes throughout your application
         SharedDataManager.setGptStatusMapping(gptStatusMapping);
@@ -63,11 +62,12 @@ async function startServer() {
     }
 }
 
-startServer()
-.then( () => 
-    db.addNewInvalidEmails(1, ['a','b','c'])
-    .then(() => console.log("added emails to invalid sender table"))
-    .catch(() => console.log("FAILED TO add emails to invalid sender table"))
-);
+startServer();
+
+    // .then(() =>
+    //     db.addNewInvalidEmails(1, ['a', 'b', 'c'])
+    //         .then(() => console.log("added emails to invalid sender table"))
+    //         .catch(() => console.log("FAILED TO add emails to invalid sender table"))
+    // );
 
 

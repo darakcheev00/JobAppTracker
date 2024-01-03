@@ -98,7 +98,7 @@ export default class GptManager {
                 if (jsonRes.status.includes("unrelated") || jsonRes.status.includes("not related")) {
                     jsonRes.status = -1;
                 } else {
-                    throw new Error(`status ${jsonRes.status} UNKNOWN`);
+                    throw new Error(`status '${jsonRes.status}' is UNKNOWN`);
                 }
             }
             

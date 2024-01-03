@@ -1,5 +1,7 @@
+import { error } from 'console';
 import { decode } from './base64';
 import GptManager from './gptService';
+import { JSDOM } from 'jsdom';
 
 
 export default class EmailParser {
@@ -33,7 +35,8 @@ export default class EmailParser {
 	}
 
 	static extractContent = (s: string, space: boolean) => {
-		var span = document.createElement('span');
+		const dom = new JSDOM(s);
+		var span = dom.window.document.createElement('span');
 		span.innerHTML = s;
 
 		if (space) {
@@ -68,98 +71,107 @@ export default class EmailParser {
 		var textHtml = "";
 		var textPlain = "";
 
-		var payload = full_message.payload;
-		if (!payload) {
-			return {valid: false};
-		}
+		try {
 
-		var headers = this.indexHeaders(payload.headers);
+			var payload = full_message.payload;
+			if (!payload) {
+				return { valid: false };
+			}
 
-		if (headers.from) {
-			sender = headers.from;
+			var headers = this.indexHeaders(payload.headers);
 
-			// Return if sender is in invalid sender list (since invalid senders are any string snippets we forloop over all snippets);
-			if (invalid_senders.size > 0) {
-				const invalidSnippetsArray = Array.from(invalid_senders);
-				if (invalidSnippetsArray.some(invalidSnippet => invalidSnippet !== "" && sender.includes(invalidSnippet))) {
-					// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
-					return {valid: false};
+			if (headers.from) {
+				sender = headers.from;
+
+				// Return if sender is in invalid sender list (since invalid senders are any string snippets we forloop over all snippets);
+				if (invalid_senders.size > 0) {
+					const invalidSnippetsArray = Array.from(invalid_senders);
+					if (invalidSnippetsArray.some(invalidSnippet => invalidSnippet !== "" && sender.includes(invalidSnippet))) {
+						// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
+						return { valid: false };
+					}
 				}
-			}
-		} else {
-			return {valid: false}
-		}
-
-		subject = headers.subject;
-		if (!subject) {
-			return {valid: false}
-		}
-
-		var parts = [payload];
-		var firstPartProcessed = false;
-
-		while (parts.length !== 0) {
-			var part = parts.shift();
-			if (part.parts) {
-				parts = parts.concat(part.parts);
-			}
-			
-			if (firstPartProcessed) {
-				headers = this.indexHeaders(part.headers);
+			} else {
+				return { valid: false }
 			}
 
-			if (!part.body) {
-				continue;
+			subject = headers.subject;
+			if (!subject) {
+				return { valid: false }
 			}
 
-			var isHtml = part.mimeType && part.mimeType.includes('text/html');
-			var isPlain = part.mimeType && part.mimeType.includes('text/plain');
-			var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().includes('attachment')));
-			
-			if (!isAttachment){
-				if (isHtml) {
-					textHtml = this.urlB64Decode(part.body.data);
-				} else if (isPlain) {
-					textPlain = this.urlB64Decode(part.body.data);
+			var parts = [payload];
+			var firstPartProcessed = false;
+
+			while (parts.length !== 0) {
+				var part = parts.shift();
+				if (part.parts) {
+					parts = parts.concat(part.parts);
 				}
-			}
-			
-			firstPartProcessed = true;
-		}
 
-		let full_text = ""
-		if (textPlain === "") {
-			const converted_html_to_plain = this.extractContent(textHtml, true);
-			full_text = converted_html_to_plain;
-			// console.log(messageObj.id, converted_html_to_plain);
-		} else {
-			full_text = textPlain;
+				if (firstPartProcessed) {
+					headers = this.indexHeaders(part.headers);
+				}
+
+				if (!part.body) {
+					continue;
+				}
+
+				var isHtml = part.mimeType && part.mimeType.includes('text/html');
+				var isPlain = part.mimeType && part.mimeType.includes('text/plain');
+				var isAttachment = Boolean(part.body.attachmentId || (headers['content-disposition'] && headers['content-disposition'].toLowerCase().includes('attachment')));
+
+				if (!isAttachment) {
+					if (isHtml) {
+						textHtml = this.urlB64Decode(part.body.data);
+					} else if (isPlain) {
+						textPlain = this.urlB64Decode(part.body.data);
+					}
+				}
+
+				firstPartProcessed = true;
+			}
+
+			var full_text = ""
+			if (textPlain === "") {
+				const converted_html_to_plain = this.extractContent(textHtml, true);
+				full_text = converted_html_to_plain;
+				// console.log(messageObj.id, converted_html_to_plain);
+			} else {
+				full_text = textPlain;
+			}
+
+		} catch (err: any) {
+			console.error(sender,subject,full_message.id);
+			throw new Error(`failed parsing message: ${err}`)
 		}
 
 		// Remove links from text
 		full_text = full_text.replace(/\d/g, '*').replace('\n', '').replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
 		// console.log(`!!full text has ${full_text.indexOf('http')} links`);
 
+
 		// call chat gpt
-		try{
+		try {
 			var gptRes = await GptManager.callGpt(sender, subject, full_text, gptKey);
 			// if (gptRes.company === "unspecified" || gptRes.position === "unspecified"){
 			// 	console.log("running gpt once more");
 			// 	// TODO: modify prompt to say try again
 			// 	gptRes = await this.callGpt(messageObj, full_text, gptKey);
 			// }
+			// console.log(`gptres: ${gptRes}`);
 		} catch (err: any) {
 			console.error(`GptManager returned: ${err}`);
-			return {valid: false};
+			return { valid: false };
 		}
 
 		// check if sender is invalid by checking if status == unrelated
-		if (gptRes.status === -1){
-			return {valid: false, sender: sender}
+		if (gptRes.status === -1) {
+			return { valid: false, sender: sender }
 		}
-		
-        if (gptRes.company.includes("unspecified")){
-			return {valid: false}
+
+		if (gptRes.company.includes("unspecified")) {
+			return { valid: false }
 		}
 
 		const result = {
@@ -174,5 +186,5 @@ export default class EmailParser {
 		return result;
 	};
 
-	
+
 }
