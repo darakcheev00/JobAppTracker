@@ -9,6 +9,7 @@ import axios from 'axios';
 
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
+import ServerManager from './utils/server_manager';
 
 import './App.css';
 
@@ -25,6 +26,8 @@ function App() {
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [showChart, setShowChart] = useState<boolean>(true);
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
+	const [serverUp, setServerUp] = useState<boolean>(true);
+
 
 	useEffect(() => {
 		console.log("starting....");
@@ -39,6 +42,11 @@ function App() {
 				setJwt(await StorageManager.getJwt());
 			}
 
+			if (!await ServerManager.healthCheck()) {
+				setServerUp(false);
+				return;
+			}
+
 			// setInvalidEmails(await StorageManager.getInvalidEmails());
 
 			// const savedGptKey = await StorageManager.getGptKey();
@@ -49,6 +57,10 @@ function App() {
 		})();
 
 	}, []);
+
+	const reconnect = async () => {
+		setServerUp(await ServerManager.healthCheck() == true);
+	}
 
 	async function handleLoginClick() {
 		if (loading) return;
@@ -92,6 +104,13 @@ function App() {
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
 
+					{!serverUp && (
+						<div>
+							<h3>❌ SERVER DOWN ❌</h3>
+							<button id="refresh_btn" onClick={() => reconnect()}>Reconnect 🔄</button>
+						</div>
+					)}
+
 					<button id="settings-button" onClick={() => setShowSettings(!showSettings)}>
 						{!showSettings ? 'Settings' : 'Back'}
 					</button>
@@ -112,7 +131,8 @@ function App() {
 							setTableData,
 							showChart,
 							jwt,
-							setJwt
+							setJwt,
+							setServerUp
 						}} />
 					)}
 				</div>

@@ -20,8 +20,8 @@ $clr-interview: #c8e6c9;
 $clr-interview-font: #388e3c;
 $clr-offer: #dcc8e6;
 $clr-offer-font: #7b3b9b;
-$clr-unspec: #c0c0c0;
-$clr-unspec-font: #000000;
+$clr-ghosted: #c0c0c0;
+$clr-ghosted-font: #000000;
 $clr-other: #9ddaf7;
 $clr-other-font: #005780;
 $clr-link: #2962ff;
@@ -191,9 +191,9 @@ table {
       color: $clr-offer-font;
     }
 
-    &-unspec {
-      background-color: $clr-unspec;
-      color: $clr-unspec-font;
+    &-ghosted {
+      background-color: $clr-ghosted;
+      color: $clr-ghosted-font;
     }
   }
 

@@ -22,6 +22,7 @@ type MainPageProps = {
     showChart: boolean;
     jwt: string | undefined;
     setJwt: (key: string | undefined) => void;
+    setServerUp: (key: boolean) => void;
 };
 
 interface TableCounts {
@@ -32,24 +33,24 @@ interface TableCounts {
     todayAppliedCount: number;
 }
 
-const statusDict: { [key: string]: string } = {
-    "application received": "appsent",
-    "rejected": "rejected",
-    "interview requested": "interview",
-    "received offer": "offer",
-    "unspecified": "unspec",
-    "action required for job application": "actionReq",
-    "invited to apply": "actionReq"
+export enum Status {
+    AppRecieved = 1,
+    Rejected,
+    Interview,
+    Offer,
+    Ghosted,
+    InvitedToApply,
+    ActionReq
 }
 
-const statusDisplayNames: { [key: string]: string } = {
-    "application received": "Applied",
-    "rejected": "Rejected",
-    "interview requested": "Interview",
-    "received offer": "Offer",
-    "unspecified": "Unspecified",
-    "action required for job application": "Action required",
-    "invited to apply": "Invited to apply"
+const statusNames: { [key: number]: string[] } = {
+    1: ["Applied", "appsent"],
+    2: ["Rejected", "rejected"],
+    3: ["Interview", "interview"],
+    4: ["Offer", "offer"],
+    5: ["Ghosted", "ghosted"],
+    6: ["Invited to apply", "actionReq"],
+    7: ["Action required", "actionReq"]
 }
 
 export default function MainPage({
@@ -61,14 +62,14 @@ export default function MainPage({
     setTableData,
     showChart,
     jwt,
-    setJwt }: MainPageProps) {
+    setJwt,
+    setServerUp }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
     const [displayedTableData, setDisplayedTableData] = useState<Message[] | undefined>(undefined);
     const [tableCounts, setTableCounts] = useState<TableCounts>();
     const [searchTerm, setSearchTerm] = useState<string | undefined>("");
     const [dataFilter, setDataFilter] = useState<number>(0);
-
 
     useEffect(() => {
         (async () => {
@@ -83,14 +84,14 @@ export default function MainPage({
         if (tableData !== undefined) {
             console.log("tableData changed: ", tableData);
             setTableCounts({
-                appsReceived: tableData?.filter(item => item.gptRes.status === "application received").length,
-                rejected: tableData?.filter(item => item.gptRes.status === "rejected").length,
-                interviews: tableData?.filter(item => item.gptRes.status === "interview requested").length,
-                offers: tableData?.filter(item => item.gptRes.status === "received offer").length,
+                appsReceived: tableData?.filter(item => item.gptRes.status === Status.AppRecieved).length,
+                rejected: tableData?.filter(item => item.gptRes.status === Status.Rejected).length,
+                interviews: tableData?.filter(item => item.gptRes.status === Status.Interview).length,
+                offers: tableData?.filter(item => item.gptRes.status === Status.Offer).length,
                 todayAppliedCount: tableData?.filter(item => {
                     const now = new Date();
                     let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-                    return (start < new Date(item.internalDate) && item.gptRes.status === "application received");
+                    return (start < new Date(item.internalDate) && item.gptRes.status === Status.AppRecieved);
                 }).length,
             });
         }
@@ -101,12 +102,14 @@ export default function MainPage({
         console.log("Refreshing...");
 
         // do server health check, other wise return because we dont want to do half the work
-        if (!await ServerManager.healthCheck()){
+        if (!await ServerManager.healthCheck()) {
+            setServerUp(false);
             return;
         }
+        setServerUp(true);
 
         if (!await GoogleApiManager.authTokenCheck(authToken)) {
-            
+
             const newAuthToken = await AuthManager.authenticate();
             setAuthToken(newAuthToken);
 
@@ -125,7 +128,7 @@ export default function MainPage({
                     setJwt(data.token);
                     StorageManager.setJwt(data.token);
                     console.log("On refresh: Authtoken updated, new jwt received.");
-                }else{
+                } else {
                     throw new Error("Failed re-login");
                 }
             } catch (err: any) {
@@ -134,7 +137,7 @@ export default function MainPage({
             }
         }
 
-        
+
         console.log('calling GET http://localhost:8000/status/new');
         try {
             const response = await fetch("http://localhost:8000/status/new", {
@@ -155,11 +158,7 @@ export default function MainPage({
         }
 
         // TODO: do something with data rows
-        console.log(data);
-
-
-        const validMessages: Message[] = [];
-        // await GmailApiManager.getMessages(gmailToken, dateNewestMsg, gptKey, invalidEmails);
+        const validMessages: Message[] = data;
 
         console.log("Messages: ", validMessages);
 
@@ -203,20 +202,20 @@ export default function MainPage({
     }, [searchTerm]);
 
     const filterAll = () => { setDisplayedTableData(tableData); setDataFilter(0); };
-    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "application received")); setDataFilter(1); }
-    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "rejected")); setDataFilter(2); }
-    const filterInterviews = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "interview requested")) }
-    const filterOffers = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === "received offer")) }
+    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.AppRecieved)); setDataFilter(1); }
+    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Rejected)); setDataFilter(2); }
+    const filterInterviews = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Interview)) }
+    const filterOffers = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Offer)) }
     const filterOther = () => {
         setDisplayedTableData(tableData?.filter(item => {
-            return item.gptRes.status !== "application received" &&
-                item.gptRes.status !== "rejected" &&
-                item.gptRes.status !== "interview requested" &&
-                item.gptRes.status !== "received offer"
+            return item.gptRes.status !== Status.AppRecieved &&
+                item.gptRes.status !== Status.Rejected &&
+                item.gptRes.status !== Status.Interview &&
+                item.gptRes.status !== Status.Offer
         }))
     }
 
-    const handleDelete = async (rowId: number) => {
+    const handleDelete = async (rowId: string) => {
         // Filter out the row to be deleted based on its unique identifier
         const updatedTableData = displayedTableData?.filter(item => item.id !== rowId);
         setDisplayedTableData(updatedTableData);
@@ -280,15 +279,21 @@ export default function MainPage({
                             (displayedTableData.map((item: Message) => (
                                 <tr key={item.id}>
                                     <td className='company-col'>
-                                        <a href={`https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox/${item.id}`} target="_blank" rel="noopener noreferrer">
+                                        <a href={`https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox/${item.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title={`Email snippet:\n\n${item.snippet}`}>
                                             {item.gptRes.company}
                                         </a>
                                     </td>
                                     <td className='position-col'>{item.gptRes.position}</td>
                                     <td className='status-col'>
-                                        <p className={`status status-${statusDict[item.gptRes.status]}`}>{statusDisplayNames[item.gptRes.status]}</p>
+                                        <p className={`status status-${statusNames[item.gptRes.status][1]}`}>{statusNames[item.gptRes.status][0]}</p>
                                     </td>
-                                    <td className='date-col'>{StorageManager.epochToMMDDYY(item.internalDate)}</td>
+                                    <td className='date-col'
+                                        title={StorageManager.timeConverter(item.internalDate)}>
+                                        {StorageManager.epochToMMDDYY(item.internalDate)}
+                                    </td>
                                     <td className='delete-col'>
                                         <button id='delete-button' onClick={() => handleDelete(item.id)}>✖️</button>
                                     </td>

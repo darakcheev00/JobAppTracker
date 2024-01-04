@@ -179,7 +179,7 @@ export default class EmailParser {
 			valid: true,
 			sender: sender,
 			snippet: full_message.snippet,
-			internalDate: full_message.internalDate,
+			internalDate: parseInt(full_message.internalDate),
 			gptRes: gptRes,
 		}
 

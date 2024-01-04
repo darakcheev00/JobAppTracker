@@ -4,6 +4,11 @@ import DatabaseService from "./databaseService";
 
 import { db } from '../index';
 
+function timeConverter(UNIX_timestamp: number) {
+    var a = new Date(UNIX_timestamp * 1000);
+    return a.toLocaleString("en-US", { timeZone: "America/New_York" });
+}
+
 export default class GmailService {
     static healthCheck = async (token: string | undefined) => {
         console.log("Gmail API healthcheck...");
@@ -30,7 +35,7 @@ export default class GmailService {
         }
     }
 
-    private static saveLatestMsgDate = async (auth_token: string, msg_id:number, userId: string) => {
+    private static saveLatestMsgDate = async (auth_token: string, msg_id: number, userId: string) => {
         const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg_id}`, {
             method: 'GET',
             headers: {
@@ -38,28 +43,29 @@ export default class GmailService {
             }
         });
         const full_message = await res.json();
-        
-        // returns unix timestamp in milliseconds
-        const newestMsgDate = full_message.internalDate / 1000;
-        console.log(`Received newest date in seconds: ${newestMsgDate}`);
+
+        // returns unix timestamp in milliseconds, therefore need to convert to seconds
+        const newestMsgDate = (full_message.internalDate / 1000) + 2; // gmail doesnt sense a difference if there is only 1 second between emails.
+        console.log(`Saving newest msg date: ${timeConverter(newestMsgDate)}`);
 
         await db.setNewestMsgDate(userId, newestMsgDate);
     };
 
     static processInbox = async (userId: string) => {
-        
+
         // Get data from db
         const invalidSenderSet: Set<string> = await db.getInvalidSenders(userId);
         // TODO check if invalidSenderList type is valid make sure its a set
-        var {gpt_key, auth_token, newest_msg_date} = await db.get_GPTKey_Token_Date(userId);
-        console.log(`GPTkey received: ${gpt_key}`);
-        
+        var { gpt_key, auth_token, newest_msg_date } = await db.get_GPTKey_Token_Date(userId);
+        console.log(`== date retrieved: ${timeConverter(newest_msg_date)}`);
+
         // TODO: if newestMsgDate is not set then get past 25
-        if (newest_msg_date === undefined){
+        if (newest_msg_date === undefined) {
             newest_msg_date = 1703094681;
         }
-        newest_msg_date = 1703094681; // TEMP, REMOVE
-        
+        // newest_msg_date = 1703094681;
+
+
         // date in seconds
         const gmailQuery = `in:inbox category:primary after:${newest_msg_date}`;
         // const gmailQuery = `in:inbox category:primary`;
@@ -67,6 +73,7 @@ export default class GmailService {
 
         try {
             const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${gmailQuery}`, {
+                // const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${gmailQuery}`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${auth_token}`
@@ -97,32 +104,35 @@ export default class GmailService {
                     }
                 });
                 const full_message = await res.json();
-                return await EmailParser.parseMessage(full_message, gpt_key, invalidSenderSet); 
+                return await EmailParser.parseMessage(full_message, gpt_key, invalidSenderSet);
             });
-            
+
             const reduced_messages = await Promise.all(messagePromises);
-            console.log(`async promises completed`);
+            // console.log(`async promises completed`);
 
             const valid_messages = [];
             const unrelated_messages = [];
-            console.log("messages filtered.");
+            // console.log("messages filtered.");
 
-            for (const msg of reduced_messages){
-                if (msg.valid){
+            for (const msg of reduced_messages) {
+                if (msg.valid) {
                     valid_messages.push(msg);
                 } else {
                     if (msg.sender) {
                         unrelated_messages.push(msg);
+                        console.log(`Discarding unrelated msg from ${msg.sender}`);
+                    } else {
+                        console.log(`Discarding unrelated msg. NO SENDER. id: ${msg.id}`);
                     }
                 }
             }
             console.log(`${valid_messages.length} valid, ${unrelated_messages.length} unrelated found.`);
-            
+
             // check the non related to application messages and record their addresses into the invalid sender table.
             let newInvalidSendersList = [];
-            for (const msg of unrelated_messages){
-                const address = msg.sender.slice(msg.sender.indexOf("<")+1, msg.sender.indexOf(">"));
-                if (invalidSenderSet.has(address)){
+            for (const msg of unrelated_messages) {
+                const address = msg.sender.slice(msg.sender.indexOf("<") + 1, msg.sender.indexOf(">"));
+                if (invalidSenderSet.has(address)) {
                     newInvalidSendersList.push(address);
                 }
             }

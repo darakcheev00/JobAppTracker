@@ -5,6 +5,8 @@ import { ComposedChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, Label, Carte
 
 import { table } from 'console';
 
+import { Status } from './MainPage';
+
 type AppsChartProps = {
     tableData: Message[] | undefined;
     dataFilter: number;
@@ -83,12 +85,12 @@ export default function AppsChart({ tableData, dataFilter }: AppsChartProps) {
                 // }).length : 0;
 
                 let dayCountApplied = tableData ? tableData.filter(item => {
-                    return curr <= item.internalDate && item.internalDate < next && item.gptRes.status === "application received"
+                    return curr <= item.internalDate && item.internalDate < next && item.gptRes.status === Status.AppRecieved
                 }).length : 0;
 
 
                 let dayCountRejected = tableData ? tableData.filter(item => {
-                    return curr <= item.internalDate && item.internalDate < next && item.gptRes.status === "rejected"
+                    return curr <= item.internalDate && item.internalDate < next && item.gptRes.status === Status.Rejected
                 }).length : 0;
 
 

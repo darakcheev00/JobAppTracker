@@ -2,14 +2,14 @@ import { table } from "console";
 
 
 export interface Message {
-    id: number;
+    id: string;
     sender: string;
     snippet: string;
     internalDate: number;
     gptRes: {
         company: string;
         position: string;
-        status: string;
+        status: number;
     };
 }
 
@@ -19,7 +19,22 @@ export default class StorageManager {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
         const year = date.getFullYear().toString().slice(-2);
-        return `${month}/${day}/${year}`;
+        const res = `${month}/${day}/${year}`;
+        console.log(res);
+        return res;
+    }
+
+    static timeConverter(UNIX_timestamp: number) {
+        var a = new Date(UNIX_timestamp);
+        // var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        // var year = a.getFullYear();
+        // var month = months[a.getMonth()];
+        // var date = a.getDate();
+        // var hour = a.getHours();
+        // var min = a.getMinutes();
+        // var sec = a.getSeconds();
+        // var time = month + ' ' + date + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+        return a.toLocaleString("en-US", { timeZone: "America/New_York" });
     }
 
     static clearTableData = async () => {
