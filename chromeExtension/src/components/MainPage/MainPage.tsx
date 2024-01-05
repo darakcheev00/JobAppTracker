@@ -226,6 +226,24 @@ export default function MainPage({
         } else {
             await StorageManager.overrideTableData([]);
         }
+
+        try {
+            const response = await fetch(`http://localhost:8000/status/${rowId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${jwt}`
+                },
+            });
+            if (response.ok) {
+                console.log(`Deleted email with id: ${rowId}.`);
+            } else {
+                throw new Error("Failed delete");
+            }
+        } catch (err: any) {
+            console.error(`error deleting in db: ${err}`);
+        }
+
     };
 
     return (

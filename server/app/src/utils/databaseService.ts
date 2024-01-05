@@ -339,6 +339,14 @@ export default class DatabaseService {
         }
     }
 
+    async deleteStatus(userId: any, msgId: string){
+        try {
+            await this.pool.query("DELETE FROM AppStatus WHERE UserId = $1 AND gmailmsgid = $2", [userId, msgId]);
+        } catch (err) {
+            console.error('[server]: Error deleting status. SQL query error: ', err);
+            throw new Error('Internal server error');
+        }
+    }
 
     async addNewStatuses(userId: any, messages: any) {
         // convert input to rows to insert

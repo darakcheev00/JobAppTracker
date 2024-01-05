@@ -19,7 +19,7 @@ router.get('/', verifyToken, async (req: AuthedRequest, res: Response) => {
 
         res.json(allStatusUpdates);
 
-    } catch(error: any){
+    } catch (error: any) {
         res.status(500).json(error.message);
     }
 });
@@ -38,17 +38,38 @@ router.get('/types', async (req: AuthedRequest, res: Response) => {
 });
 
 
+// delete a status from db
+router.delete('/:msgid', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log(`Hit DELETE /status endpoint`);
+    const userId = req.user_id;
+    const msgId = req.params.msgid;
+
+    if (msgId === undefined) { 
+        console.error("msgid undefined");
+        res.sendStatus(500); 
+    }
+
+    try {
+        await db.deleteStatus(userId, msgId);
+        console.log(`deleted ${msgId} status successfully`);
+        res.sendStatus(200);
+    } catch (error: any) {
+        res.status(500).json(error.message);
+    }
+});
+
+
 // get new status's from db (call gpt and return new ones only)
-router.get('/new', verifyToken, async (req:AuthedRequest, res: Response) => {
+router.get('/new', verifyToken, async (req: AuthedRequest, res: Response) => {
     console.log(`\nHit /status/new endpoint`);
 
     const userId = req.user_id;
-    
-    if (userId === undefined){
+
+    if (userId === undefined) {
         res.status(500).json('User_id could not be extracted from the jwt.');
         return;
     }
-    
+
     // call gmail service
     const messages = await GmailService.processInbox(userId);
     console.log(messages);
