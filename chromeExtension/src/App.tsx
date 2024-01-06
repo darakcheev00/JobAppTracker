@@ -26,7 +26,7 @@ function App() {
 	const [showSettings, setShowSettings] = useState<boolean | undefined>(false);
 	const [showChart, setShowChart] = useState<boolean>(true);
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
-	const [serverUp, setServerUp] = useState<boolean>(true);
+	const [serverUp, setServerUp] = useState<Boolean>(true);
 
 
 	useEffect(() => {
@@ -134,6 +134,7 @@ function App() {
 							showChart,
 							jwt,
 							setJwt,
+							serverUp,
 							setServerUp
 						}} />
 					)}

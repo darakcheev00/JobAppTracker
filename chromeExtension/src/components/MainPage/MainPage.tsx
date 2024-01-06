@@ -22,7 +22,8 @@ type MainPageProps = {
     showChart: boolean;
     jwt: string | undefined;
     setJwt: (key: string | undefined) => void;
-    setServerUp: (key: boolean) => void;
+    serverUp: Boolean;
+    setServerUp: (key: Boolean) => void;
 };
 
 interface TableCounts {
@@ -63,6 +64,7 @@ export default function MainPage({
     showChart,
     jwt,
     setJwt,
+    serverUp,
     setServerUp }: MainPageProps) {
 
     const [refreshMsg, setRefreshMsg] = useState<string | undefined>("");
@@ -248,7 +250,7 @@ export default function MainPage({
 
     return (
         <div>
-            {!gptKeyValid && <GptForm {...{ setGptKeyValid, setRefreshMsg, jwt }} />}
+            {!gptKeyValid && serverUp && <GptForm {...{ setGptKeyValid, setRefreshMsg, jwt }} />}
 
             {showChart && tableData && <AppsChart {...{ tableData, dataFilter }} />}
 
