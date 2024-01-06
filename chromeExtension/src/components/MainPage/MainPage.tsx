@@ -15,8 +15,8 @@ import { isVariableDeclaration } from 'typescript';
 type MainPageProps = {
     authToken: string | undefined;
     setAuthToken: (key: string | undefined) => void;
-    gptKeyValid: boolean | undefined;
-    setGptKeyValid: (key: boolean) => void;
+    gptKeyValid: Boolean;
+    setGptKeyValid: (key: Boolean) => void;
     tableData: Message[] | undefined;
     setTableData: (key: Message[] | undefined) => void;
     showChart: boolean;
@@ -248,7 +248,7 @@ export default function MainPage({
 
     return (
         <div>
-            {!gptKeyValid && <GptForm {...{ setGptKeyValid, setRefreshMsg }} />}
+            {!gptKeyValid && <GptForm {...{ setGptKeyValid, setRefreshMsg, jwt }} />}
 
             {showChart && tableData && <AppsChart {...{ tableData, dataFilter }} />}
 

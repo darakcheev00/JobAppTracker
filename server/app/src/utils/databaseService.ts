@@ -101,8 +101,9 @@ export default class DatabaseService {
     async updateUserInfo(userId: any, updatedUserData: Record<string, any>) {
         try {
             const user_table_map: { [key: string]: string } = {
-                "useremail": "UserEmail",
-                "authtoken": "AuthToken",
+                "userEmail": "useremail",
+                "authToken": "authtoken",
+                "gptKey": "gptkey"
             }
 
             // Build dynamic set

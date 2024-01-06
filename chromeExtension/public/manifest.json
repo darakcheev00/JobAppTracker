@@ -27,6 +27,6 @@
 		"https://*/*"
 	],
 	"content_security_policy": {
-		"extension_pages": "default-src 'self'; connect-src 'self' https://www.googleapis.com http://localhost:8000;"
+		"extension_pages": "default-src 'self'; connect-src 'self' https://www.googleapis.com https://api.openai.com http://localhost:8000;"
 	}
 }

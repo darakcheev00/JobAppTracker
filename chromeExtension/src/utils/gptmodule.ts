@@ -4,24 +4,28 @@ export default class GptManager {
 
     static healthCheck = async (key: string | undefined) => {
         console.log("GPT API healthcheck...");
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}`,
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: "say the word 'alive'" }]
-            }),
-        });
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`,
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: "say the word 'alive'" }]
+                }),
+            });
 
-        if (response.ok) {
-            console.log("GPT api key valid.");
-            return true;
-        } else {
-            console.error(`GPT api key NOT valid. Status:${response.status}`);
+            if (response.ok) {
+                console.log("GPT api key valid.");
+                return true;
+            } else {
+                throw new Error(`GPT api key NOT valid. Status:${response.status}`);
+            }
+        } catch (err: any) {
+            console.error(`gpt health check error: ${err}`);
             return false;
         }
     }
@@ -81,7 +85,7 @@ export default class GptManager {
     }
 
 
-    static getMotivQuote = async (gptKey:string | undefined) => {
+    static getMotivQuote = async (gptKey: string | undefined) => {
         const prompt = "Give me a random humorous and seasoned motivational quote, not by a president or steve jobs";
         // const prompt = "compliment my [insert a bad trait of a person] in an ironic way. only write your answer. give a different response every time";
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
