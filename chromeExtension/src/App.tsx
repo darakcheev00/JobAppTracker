@@ -27,6 +27,7 @@ function App() {
 	const [showChart, setShowChart] = useState<boolean>(true);
 	const [tableData, setTableData] = useState<Message[] | undefined>(undefined);
 	const [serverUp, setServerUp] = useState<Boolean>(true);
+	const [newUser, setNewUser] = useState<Boolean>(false);
 
 
 	useEffect(() => {
@@ -36,29 +37,73 @@ function App() {
 			console.log("Init. auth status returned: ", isAuthed);
 			setAuthenticated(isAuthed);
 			setLoading(false);
-			if (isAuthed) {
-				console.log("Init. Already authed");
-				setAuthToken(tokenObj.token);
-				setJwt(await StorageManager.getJwt());
-				setGptKeyValid(await ServerManager.gptKeyValidation(await StorageManager.getJwt()));
-			}
 
 			if (!await ServerManager.healthCheck()) {
 				setServerUp(false);
-				return;
 			}
 
+			if (isAuthed) {
+				console.log("Init. Already authed");
+				setAuthToken(tokenObj.token);
+				const jwt_token = await StorageManager.getJwt();
+				setJwt(jwt_token);
+
+				if (serverUp) {
+					console.log('server is up and i am authed');
+					setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
+					await loadDataFromServer(jwt_token);
+				}
+			}
 
 			// setInvalidEmails(await StorageManager.getInvalidEmails());
 
-			// const savedGptKey = await StorageManager.getGptKey();
-			// setGptKeyValid(await GptManager.healthCheck(savedGptKey));
-			// if (savedGptKey !== undefined) {
-			// 	setGptKey(savedGptKey);
-			// }
 		})();
 
 	}, []);
+
+	// useEffect(() => {
+	// 	(async () => {
+	// 		if (authenticated) {
+	// 			console.log("authenticated set to true!");
+	// 			setGptKeyValid(await ServerManager.gptKeyValidation(await StorageManager.getJwt()));
+	// 			await loadDataFromServer();
+	// 		}
+	// 	})();
+	// }, [authenticated]);
+
+	const loadDataFromServer = async (jwt_token: string) => {
+		console.log("Loading data from server...");
+		const lastMsgId = await StorageManager.getLastMsgId();
+		try {
+			var newData: Message[] = await ServerManager.loadData(lastMsgId, jwt_token);
+		} catch (err: any) {
+			console.error(err);
+			return;
+		}
+		if (newData === undefined) return;
+
+		console.log(`Loaded ${newData.length} statuses from server`);
+
+		if (newData.length > 0) {
+			// TODO check if this actually checks if there are rows in the table
+			if (Array.isArray(newData) && Array.isArray(tableData)) {
+				// chrome storage has rows already
+				setTableData(newData.concat(tableData));
+			} else {
+				// no data saved in chrome storage
+				setTableData(newData);
+			}
+			await StorageManager.saveTableData(newData as Message[]);
+			console.log(`${newData.length} statuses added to tableData and saved to storage!`);
+
+			// Find last message id
+			// Assuming its sorted
+			const newLastMsgId = newData[0].id;
+			await StorageManager.setLastMsgId(newLastMsgId);
+			console.log(`Updated lastMsgId to ${newLastMsgId}`);
+
+		}
+	}
 
 	const reconnect = async () => {
 		setServerUp(await ServerManager.healthCheck() == true);
@@ -85,6 +130,10 @@ function App() {
 
 			// response can be 200 updated token, 201 created user, 401 unauthed, 500 error
 			if (response.status === 200 || response.status === 201) {
+				if (response.status === 201){
+					setNewUser(true);
+					// TODO make new user component
+				}
 				setAuthToken(token);
 				setAuthenticated(true);
 

@@ -20,7 +20,7 @@ export default class StorageManager {
         const day = date.getDate().toString().padStart(2, '0');
         const year = date.getFullYear().toString().slice(-2);
         const res = `${month}/${day}/${year}`;
-        console.log(res);
+        // console.log(res);
         return res;
     }
 
@@ -46,8 +46,8 @@ export default class StorageManager {
     static getTableData = async () => {
         const data = await chrome.storage.local.get('tableData');
         const tableData = data.tableData;
-        console.log("   Retrieved rows from chrome storage. Count: ", tableData !== undefined ? tableData.length : 0);
-        // console.log(tableData);
+        console.log("Retrieved rows from chrome storage. Count: ", tableData !== undefined ? tableData.length : 0);
+        console.log("tableData loaded: ", tableData);
         return tableData;
     }
 
@@ -65,7 +65,7 @@ export default class StorageManager {
 
             await chrome.storage.local.set({ tableData: totalData }, () => {
                 console.log(`   Added new apps to chrome storage. new:${newData.length}, total:${totalData.length}`);
-                console.log(totalData);
+                // console.log(totalData);
             });
         } else {
             console.log("No new messages to be saved.");
@@ -173,4 +173,28 @@ export default class StorageManager {
         });
     }
 
+    static setLastMsgId = async (id: string) => {
+        await chrome.storage.local.set({ lastMsgId: id }, () => {
+            console.log(`lastMsgId set in chrome storage value ${id}`);
+        });
+    };
+
+    static getLastMsgId = async () => {
+        const data = await chrome.storage.local.get('lastMsgId');
+        console.log(`Retrieved lastMsgID from chrome storage: ${data.lastMsgId}`);
+        return data.lastMsgId;
+    };
+
 }
+
+/*
+(async () => {
+    await chrome.storage.local.set({ tableData: [] }, () => {
+        console.log("Cleared table data.");
+    });
+    const id = '18cdc66770ec0410';
+    await chrome.storage.local.set({ lastMsgId: id }, () => {
+        console.log(`lastMsgId set in chrome storage value ${id}`);
+    });
+})();
+*/

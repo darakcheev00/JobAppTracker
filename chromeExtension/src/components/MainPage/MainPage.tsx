@@ -76,7 +76,7 @@ export default function MainPage({
     useEffect(() => {
         (async () => {
             const data = await StorageManager.getTableData() as Message[];
-            console.log(data);
+            console.log("tableData loaded from storage: ", tableData);
             setTableData(data);
             setDisplayedTableData(data);
         })();
@@ -159,8 +159,11 @@ export default function MainPage({
             return;
         }
 
-        // TODO: do something with data rows
         const validMessages: Message[] = data;
+
+        if (validMessages.length > 0){
+            await StorageManager.setLastMsgId(validMessages[0].id);
+        }
 
         console.log("Messages: ", validMessages);
 

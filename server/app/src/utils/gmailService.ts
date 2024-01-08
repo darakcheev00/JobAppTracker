@@ -1,5 +1,7 @@
 import { receiveMessageOnPort } from "worker_threads";
 import EmailParser from "./emailParser";
+import {Message} from './sharedDataManager';
+
 import DatabaseService from "./databaseService";
 
 import { db } from '../index';
@@ -87,7 +89,8 @@ export default class GmailService {
 
             if (data.messages === undefined) {
                 console.log("GMAIL API: no new messages");
-                return {};
+                const res : Message[] = [];
+                return res;
             }
 
             console.log(`GMAIL API: ${data.messages.length} new messages`);
@@ -122,7 +125,7 @@ export default class GmailService {
                         unrelated_messages.push(msg);
                         console.log(`Discarding unrelated msg from ${msg.sender}`);
                     } else {
-                        console.log(`Discarding unrelated msg. NO SENDER. id: ${msg.id}`);
+                        console.log(`Discarding unrelated msg. NO SENDER. id: ${msg.id}, snippet: ${msg.snippet}`);
                     }
                 }
             }
@@ -152,6 +155,8 @@ export default class GmailService {
 
         } catch (err) {
             console.log(`Gmail service error: ${err}`);
+            const res : Message[] = [];
+            return res;
         }
     }
 }

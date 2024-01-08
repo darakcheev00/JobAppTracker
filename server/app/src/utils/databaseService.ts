@@ -31,9 +31,6 @@ export default class DatabaseService {
     // ===================== Cache =====================
     // private static invalidSenderCache: Record<string,any> = {};
 
-    // ====================================================================================================
-    // User
-    // ====================================================================================================
 
     async connect() {
         try {
@@ -54,6 +51,10 @@ export default class DatabaseService {
             throw new Error();
         }
     }
+
+    // ====================================================================================================
+    // User
+    // ====================================================================================================
 
     async getAllUsers() {
         try {
@@ -196,7 +197,7 @@ export default class DatabaseService {
             const result = await this.pool.query(queryString, [userId]);
             return result.rows.length === 0 ? null : result.rows[0].newestmsgdate;
         } catch (err: any) {
-            console.error(`[server]: Error setting newest message data. SQL query error: ${err}`);
+            console.error(`[server]: Error getting newest message data. SQL query error: ${err}`);
             throw new Error('Internal server sql error');
         }
     }
@@ -280,34 +281,43 @@ export default class DatabaseService {
     // ====================================================================================================
     // AppStatus
     // ====================================================================================================
+    private selectStatusesClause = `SELECT 
+                                        selected.JobId,
+                                        selected.date,
+                                        selected.sender,
+                                        selected.gmailmsgid,
+                                        Position.PositionName,
+                                        Job.CompanyId, 
+                                        Company.CompanyName,
+                                        StatusId,
+                                        snippet
+                                    FROM 
+                                        (SELECT * FROM AppStatus WHERE UserId = $1) AS selected
+                                    INNER JOIN
+                                        Job USING (JobId)
+                                    INNER JOIN 
+                                        Position USING (PositionId)
+                                    INNER JOIN 
+                                        Company USING (CompanyId)`;
 
-    async getAllUserStatus(userId: any) {
+    private whereClause = `WHERE selected.date > (select date from appstatus where userid = $1 and gmailmsgid = $2)`;
+
+    private orderDescClause = "ORDER BY date DESC";
+
+    async getAllUserStatus(userId: any, msgid: string) {
         try {
-            const result = await this.pool.query(`
-                SELECT 
-                    selected.JobId,
-                    selected.date,
-                    selected.sender,
-                    selected.gmailmsgid,
-                    Position.PositionName, 
-                    Job.CompanyId, 
-                    Company.CompanyName,
-                    StatusType.StatusName
-                FROM 
-                    (SELECT * FROM AppStatus WHERE UserId = $1) AS selected
-                INNER JOIN
-                    Job USING (JobId)
-                INNER JOIN 
-                    Position USING (PositionId)
-                INNER JOIN 
-                    Company USING (CompanyId)
-                INNER JOIN 
-                    StatusType USING (StatusId)
-                ORDER BY date`,
-                [userId]);
+            var result;
+            if (msgid === 'undef') {
+                // Get all
+                const queryString = this.selectStatusesClause + ' ' + this.orderDescClause;
+                result = await this.pool.query(queryString, [userId]);
+            } else {
+                const queryString = this.selectStatusesClause + ' ' + this.whereClause + ' ' + this.orderDescClause;
+                result = await this.pool.query(queryString, [userId, msgid]);
+            }
             return result.rows;
         } catch (err) {
-            console.error('[server]: Error getting user details. SQL query error: ', err);
+            console.error('[server]: Error getting user statuses. SQL query error: ', err);
             throw new Error('Internal server error');
         }
     }
@@ -340,7 +350,7 @@ export default class DatabaseService {
         }
     }
 
-    async deleteStatus(userId: any, msgId: string){
+    async deleteStatus(userId: any, msgId: string) {
         try {
             await this.pool.query("DELETE FROM AppStatus WHERE UserId = $1 AND gmailmsgid = $2", [userId, msgId]);
         } catch (err) {
@@ -367,15 +377,16 @@ export default class DatabaseService {
                     throw new Error(`no company field`);
                 }
 
-                const result = await this.pool.query("CALL insert_app_status($1, $2, $3, $4, $5, $6, $7)",
+                const result = await this.pool.query("CALL insert_app_status($1, $2, $3, $4, $5, $6, $7, $8)",
                     [
                         msg.gptRes.position,
                         msg.gptRes.company,
                         userId,
                         msg.gptRes.status,
-                        msg.internalDate/1000,
+                        msg.internalDate / 1000,
                         msg.sender,
-                        msg.id
+                        msg.id,
+                        msg.snippet
                     ]
                 );
 
@@ -383,7 +394,7 @@ export default class DatabaseService {
             } catch (err: any) {
                 console.error(`DB: Skipping saving message due to: ${err} on msg_id: ${msg.id}`);
                 continue;
-            }   
+            }
         }
     }
 }

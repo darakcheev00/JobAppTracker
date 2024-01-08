@@ -1,9 +1,12 @@
 import express, { Request, Response } from 'express';
 import GmailService from '../utils/gmailService';
 import { AuthedRequest, verifyToken } from '../utils/jwtService';
+import { Message } from '../utils/sharedDataManager';
 import SharedDataManager from '../utils/sharedDataManager';
 
+
 import { db } from '../index';
+import { stat } from 'fs';
 
 const router = express.Router();
 
@@ -13,7 +16,7 @@ router.get('/', verifyToken, async (req: AuthedRequest, res: Response) => {
     const userId = req.user_id;
 
     try {
-        const allStatusUpdates = await db.getAllUserStatus(userId);
+        const allStatusUpdates = await db.getAllUserStatus(userId, 'undef');
 
         if (allStatusUpdates.length === 0) return res.status(200).json("No entries found");
 
@@ -37,6 +40,36 @@ router.get('/types', async (req: AuthedRequest, res: Response) => {
     }
 });
 
+router.get('/load/:msgid', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log('HIT /status/load/ endpoint');
+    const userId = req.user_id;
+    const msgId = req.params.msgid === undefined ? 'undef' : req.params.msgid;
+
+    try {
+        var rows: any[] = await db.getAllUserStatus(userId, msgId);
+
+        var statuses: Message[] = rows.map((row) => {
+            return {
+                id: row.gmailmsgid,
+                sender: row.sender,
+                snippet: row.snippet,
+                internalDate: row.date,
+                gptRes: {
+                    company: row.companyname,
+                    position: row.positionname,
+                    status: row.statusid,
+                }
+            }
+        });
+
+        res.status(200).json(statuses);
+
+    } catch (err: any) {
+        res.status(500).json(`[server]: error loading statuses: ${err}`);
+    }
+
+});
+
 
 // delete a status from db
 router.delete('/:msgid', verifyToken, async (req: AuthedRequest, res: Response) => {
@@ -44,9 +77,9 @@ router.delete('/:msgid', verifyToken, async (req: AuthedRequest, res: Response) 
     const userId = req.user_id;
     const msgId = req.params.msgid;
 
-    if (msgId === undefined) { 
+    if (msgId === undefined) {
         console.error("msgid undefined");
-        res.sendStatus(500); 
+        res.sendStatus(500);
     }
 
     try {
@@ -71,9 +104,9 @@ router.get('/new', verifyToken, async (req: AuthedRequest, res: Response) => {
     }
 
     // call gmail service
-    const messages = await GmailService.processInbox(userId);
+    const messages: Message[] = await GmailService.processInbox(userId);
     console.log(messages);
-    console.log(`END OF MESSAGES =======================================`)
+    console.log(`END OF MESSAGES =======================================`);
 
     // return
     console.log(`-------------------------`);

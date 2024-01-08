@@ -2,6 +2,18 @@
 let gptStatusMapping: Record<string, number>, 
     displayNameMapping: Record<number, string>;
 
+export interface Message {
+    id: string;
+    sender: string;
+    snippet: string;
+    internalDate: number;
+    gptRes: {
+        company: string;
+        position: string;
+        status: number;
+    };
+}
+
 export default class SharedDataManager {
 
     static setGptStatusMapping(mapping: Record<string, number>) {
