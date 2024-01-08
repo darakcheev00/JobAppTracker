@@ -37,6 +37,7 @@ function App() {
 			console.log("Init. auth status returned: ", isAuthed);
 			setAuthenticated(isAuthed);
 			setLoading(false);
+			setShowChart(await StorageManager.getShowChart());
 
 			if (!await ServerManager.healthCheck()) {
 				setServerUp(false);
@@ -130,7 +131,7 @@ function App() {
 
 			// response can be 200 updated token, 201 created user, 401 unauthed, 500 error
 			if (response.status === 200 || response.status === 201) {
-				if (response.status === 201){
+				if (response.status === 201) {
 					setNewUser(true);
 					// TODO make new user component
 				}
@@ -151,7 +152,10 @@ function App() {
 			<h1 className="title">Trackify</h1>
 			{authenticated ? (
 				<div>
-					{!showSettings && tableData && <button id="chart-button" onClick={() => setShowChart(!showChart)}>
+					{!showSettings && tableData && <button id="chart-button" onClick={async () => { 
+							setShowChart(!showChart);
+							await StorageManager.setShowChart(!showChart);
+						}}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
 

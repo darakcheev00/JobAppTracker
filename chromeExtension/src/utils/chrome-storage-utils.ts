@@ -185,6 +185,20 @@ export default class StorageManager {
         return data.lastMsgId;
     };
 
+    static setShowChart = async (newBool: Boolean) => {
+        await chrome.storage.local.set({ showChart: newBool }, () => {
+            console.log(`Set showChart to ${newBool}`);
+        });
+    };
+
+    static getShowChart = async () => {
+        const data = await chrome.storage.local.get('showChart');
+        console.log(`Retrieved showChart from chrome storage.`);
+        return data.showChart;
+    };
+
+
+
 }
 
 /*
