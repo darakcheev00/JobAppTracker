@@ -61,7 +61,8 @@ function App() {
 				return; 
 			}
 
-			const jwt_token = await getJWTValue(token, tokenChanged);
+			const jwt_token = await AuthManager.getJWTValue(token, tokenChanged);
+			setJwt(jwt_token);
 
 			setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
 
@@ -72,52 +73,7 @@ function App() {
 
 		})();
 
-	}, []);
-
-	const getJWTValue = async (auth_token: string, tokenChanged: boolean) => {
-		if (tokenChanged) {
-			// Get new JWT from server
-			try {
-				return await getJwtFromServer(auth_token);
-			} catch (err: any) {
-				return '';
-			}
-		} else {
-			// Get JWT from chrome storage
-			const jwt_token = await StorageManager.getJwt();
-			setJwt(jwt_token);
-			return jwt_token;
-		}
-
-	}
-
-	const getJwtFromServer = async (google_auth_token: string): Promise<string> => {
-		console.log("Sending login request to server.");
-		try {
-			const response = await fetch("http://localhost:8000/auth/login", {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ token: google_auth_token })
-			});
-			const data = await response.json();
-			// console.log(`SERVER: ${JSON.stringify(data)}`);
-
-			if (response.ok) {
-				setJwt(data.token);
-				StorageManager.setJwt(data.token);
-				console.log("getJwtFromServer: new jwt received.");
-				return data.token;
-			} else {
-				throw new Error("failed getting jwt token");
-			}
-		} catch (err: any) {
-			console.error("Error :", err.message);
-			return '';
-		}
-
-	}
+	}, []);	
 
 	const loadDataFromServer = async (jwt_token: string) => {
 		console.log("Loading data from server...");
@@ -154,7 +110,28 @@ function App() {
 	}
 
 	const reconnect = async () => {
-		setServerUp(await ServerManager.healthCheck() == true);
+		// Check if server is up
+		const serverRunning = await ServerManager.healthCheck();
+		if (!serverRunning){
+			setServerUp(false);
+			return;
+		}
+		
+		// Get jwt from storage
+		var jwt_token = await StorageManager.getJwt();
+		
+		// Check if auth token has expired
+		if (!await GoogleApiManager.authTokenCheck(authToken)){
+			// Get new Token
+			const new_auth_token = await AuthManager.authenticate();
+			// Get new jwt from server
+			jwt_token = await AuthManager.getJWTValue(new_auth_token, true);
+		}
+		setJwt(jwt_token);
+
+		setServerUp(true);
+
+		setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
 	}
 
 	async function handleLoginClick() {
@@ -163,7 +140,7 @@ function App() {
 		console.log("Logging in...");
 
 		const token: string | undefined = await AuthManager.authenticate();
-		console.log("authenticate returned token: ", token);
+		// console.log("authenticate returned token: ", token);
 
 		try {
 			const response = await fetch("http://localhost:8000/auth/login", {
@@ -174,7 +151,6 @@ function App() {
 				body: JSON.stringify({ token })
 			});
 			const data = await response.json();
-			console.log(`SERVER: ${JSON.stringify(data)}`);
 
 			// response can be 200 updated token, 201 created user, 401 unauthed, 500 error
 			if (response.status === 200 || response.status === 201) {

@@ -103,49 +103,35 @@ export default function MainPage({
     const refresh = async () => {
         console.log("Refreshing...");
 
-        // do server health check, other wise return because we dont want to do half the work
+        // Check if server is up
         if (!await ServerManager.healthCheck()) {
             setServerUp(false);
             return;
         }
         setServerUp(true);
 
-        if (!await GoogleApiManager.authTokenCheck(authToken)) {
+        // Get jwt from storage
+		var jwt_token = jwt;
+		// var jwt_token = await StorageManager.getJwt();
+        
+		// Check if auth token has expired
+		if (!await GoogleApiManager.authTokenCheck(authToken)){
+            // Get new Token
+			const new_auth_token = await AuthManager.authenticate();
+            setAuthToken(new_auth_token);
+			// Get new jwt from server
+			jwt_token = await AuthManager.getJWTValue(new_auth_token, true);
+            setJwt(jwt_token);
+		}
 
-            const newAuthToken = await AuthManager.authenticate();
-            setAuthToken(newAuthToken);
+        setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
 
-            try {
-                const response = await fetch("http://localhost:8000/auth/login", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ newAuthToken })
-                });
-                const data = await response.json();
-                console.log(`SERVER: ${JSON.stringify(data)}`);
-
-                if (response.ok) {
-                    setJwt(data.token);
-                    StorageManager.setJwt(data.token);
-                    console.log("On refresh: Authtoken updated, new jwt received.");
-                } else {
-                    throw new Error("Failed re-login");
-                }
-            } catch (err: any) {
-                console.error("Error logging in:", err.message);
-                return;
-            }
-        }
-
-
-        console.log('calling GET http://localhost:8000/status/new');
+        console.log('calling GET status/new');
         try {
             const response = await fetch("http://localhost:8000/status/new", {
                 method: 'GET',
                 headers: {
-                    Authorization: `Bearer ${jwt}`
+                    Authorization: `Bearer ${jwt_token}`
                 }
             });
             var data = await response.json();
