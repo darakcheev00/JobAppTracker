@@ -30,18 +30,19 @@ export default class GoogleApiManager {
             const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`, {
                 method: 'GET'
             });
-
             const data = await response.json();
 
             if (data.error) throw new Error('Google auth token invalid');
 
             if (response.ok) {
                 console.log("Google auth token valid.");
+                return true;
+            } else {
+                throw new Error(response.statusText);
             }
-            return response.ok;
 
         } catch (error) {
-            console.error("Auth token healthcheck: Error:", error);
+            console.log("Google auth token invalid:", error);
             return false;
         }
     }

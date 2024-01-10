@@ -283,7 +283,7 @@ export default class DatabaseService {
     // ====================================================================================================
     private selectStatusesClause = `SELECT 
                                         selected.JobId,
-                                        selected.date,
+                                        EXTRACT(EPOCH FROM selected.date),
                                         selected.sender,
                                         selected.gmailmsgid,
                                         Position.PositionName,

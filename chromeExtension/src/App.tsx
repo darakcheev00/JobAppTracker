@@ -10,6 +10,7 @@ import axios from 'axios';
 import Settings from './components/Settings/Settings';
 import MainPage from './components/MainPage/MainPage';
 import ServerManager from './utils/server_manager';
+import GoogleApiManager from './utils/gmailApiService';
 
 import './App.css';
 
@@ -33,44 +34,90 @@ function App() {
 	useEffect(() => {
 		console.log("starting....");
 		(async () => {
-			const [isAuthed, tokenObj] = await AuthManager.isAuthenticated();
-			console.log("Init. auth status returned: ", isAuthed);
-			setAuthenticated(isAuthed);
+
+			// Load auth token
+			var token = await AuthManager.getAuthTokenFromStorage();
+			var tokenChanged = false;
+
+			var tokenExists = token !== undefined && token !== null;
+
+			// Check if token dne or token is expired
+			if (!tokenExists || (tokenExists && !await GoogleApiManager.authTokenCheck(token))) {
+				console.log(`Token dne or is expired.`);
+				token = await AuthManager.authenticate();
+				tokenChanged = true;
+			}
+
+			// Set auth token state
+			setAuthToken(token);
+			setAuthenticated(true);
 			setLoading(false);
 			setShowChart(await StorageManager.getShowChart());
 
-			if (!await ServerManager.healthCheck()) {
-				setServerUp(false);
+			const serverRunning = await ServerManager.healthCheck();
+			setServerUp(serverRunning);
+			if (!serverRunning) {
+				console.log(`=== INIT DONE ===`);
+				return; 
 			}
 
-			if (isAuthed) {
-				console.log("Init. Already authed");
-				setAuthToken(tokenObj.token);
-				const jwt_token = await StorageManager.getJwt();
-				setJwt(jwt_token);
+			const jwt_token = await getJWTValue(token, tokenChanged);
 
-				if (serverUp) {
-					console.log('server is up and i am authed');
-					setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
-					await loadDataFromServer(jwt_token);
-				}
-			}
+			setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
+
+			await loadDataFromServer(jwt_token);
 
 			// setInvalidEmails(await StorageManager.getInvalidEmails());
+			console.log(`=== INIT DONE =============================`);
 
 		})();
 
 	}, []);
 
-	// useEffect(() => {
-	// 	(async () => {
-	// 		if (authenticated) {
-	// 			console.log("authenticated set to true!");
-	// 			setGptKeyValid(await ServerManager.gptKeyValidation(await StorageManager.getJwt()));
-	// 			await loadDataFromServer();
-	// 		}
-	// 	})();
-	// }, [authenticated]);
+	const getJWTValue = async (auth_token: string, tokenChanged: boolean) => {
+		if (tokenChanged) {
+			// Get new JWT from server
+			try {
+				return await getJwtFromServer(auth_token);
+			} catch (err: any) {
+				return '';
+			}
+		} else {
+			// Get JWT from chrome storage
+			const jwt_token = await StorageManager.getJwt();
+			setJwt(jwt_token);
+			return jwt_token;
+		}
+
+	}
+
+	const getJwtFromServer = async (google_auth_token: string): Promise<string> => {
+		console.log("Sending login request to server.");
+		try {
+			const response = await fetch("http://localhost:8000/auth/login", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ token: google_auth_token })
+			});
+			const data = await response.json();
+			// console.log(`SERVER: ${JSON.stringify(data)}`);
+
+			if (response.ok) {
+				setJwt(data.token);
+				StorageManager.setJwt(data.token);
+				console.log("getJwtFromServer: new jwt received.");
+				return data.token;
+			} else {
+				throw new Error("failed getting jwt token");
+			}
+		} catch (err: any) {
+			console.error("Error :", err.message);
+			return '';
+		}
+
+	}
 
 	const loadDataFromServer = async (jwt_token: string) => {
 		console.log("Loading data from server...");
@@ -152,10 +199,10 @@ function App() {
 			<h1 className="title">Trackify</h1>
 			{authenticated ? (
 				<div>
-					{!showSettings && tableData && <button id="chart-button" onClick={async () => { 
-							setShowChart(!showChart);
-							await StorageManager.setShowChart(!showChart);
-						}}>
+					{!showSettings && tableData && <button id="chart-button" onClick={async () => {
+						setShowChart(!showChart);
+						await StorageManager.setShowChart(!showChart);
+					}}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
 

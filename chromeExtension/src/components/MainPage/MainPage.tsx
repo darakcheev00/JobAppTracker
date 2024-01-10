@@ -11,6 +11,7 @@ import ServerManager from '../../utils/server_manager';
 import './MainPage.scss';
 import { serialize } from 'v8';
 import { isVariableDeclaration } from 'typescript';
+import { Server } from 'http';
 
 type MainPageProps = {
     authToken: string | undefined;
@@ -76,7 +77,6 @@ export default function MainPage({
     useEffect(() => {
         (async () => {
             const data = await StorageManager.getTableData() as Message[];
-            console.log("tableData loaded from storage: ", tableData);
             setTableData(data);
             setDisplayedTableData(data);
         })();
@@ -198,7 +198,7 @@ export default function MainPage({
     }
 
     useEffect(() => {
-        console.log(searchTerm);
+        // console.log(searchTerm);
         if (searchTerm !== undefined && searchTerm !== "") {
             setDisplayedTableData(tableData?.filter(item => item.gptRes.company.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1));
         } else {
@@ -222,6 +222,10 @@ export default function MainPage({
 
     const handleDelete = async (rowId: string) => {
         // Filter out the row to be deleted based on its unique identifier
+        if (!await ServerManager.healthCheck()){ 
+            return;
+        }
+
         const updatedTableData = displayedTableData?.filter(item => item.id !== rowId);
         setDisplayedTableData(updatedTableData);
         setTableData(updatedTableData);

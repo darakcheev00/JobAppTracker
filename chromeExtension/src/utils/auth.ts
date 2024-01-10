@@ -1,36 +1,23 @@
 export default class AuthManager {
 
-    static isAuthenticated = async () => {
+    static getAuthTokenFromStorage = async () => {
         const data = await chrome.storage.local.get('authToken');
-        const authToken = data.authToken;
-        console.log("Token retrieved: ", authToken);
-        const authenticated = authToken !== undefined && authToken !== null;
-
-        // DEBUG
-        console.log("isAuthenticated: ", authenticated);
-
-        return [authenticated, authToken];
+        console.log(`Token retrieved: ${!data.authToken ? data.authToken : data.authToken.substring(0, 25)}...`);
+        return data.authToken;
     };
 
-    static setAuthTokenAsync = async (token: {}) => {
+    static setAuthTokenAsync = async (token: string) => {
         await chrome.storage.local.set({ authToken: token }, () => {
             console.log("Token stored: ", token);
         });
     };
 
-
     static authenticate = async () => {
-        console.log("Authenticating...");
-        const authToken = await chrome.identity.getAuthToken({ interactive: true });
+        console.log("Getting google auth token (interactive)...");
+        const data = await chrome.identity.getAuthToken({ interactive: true });
 
-        await this.setAuthTokenAsync(authToken);
-        console.log("Authenticated! Token: ", authToken);
-
-        // DEBUG
-        const [_, resToken] = await this.isAuthenticated();
-        console.log("Logged in. Auth:", resToken);
-
-        return authToken.token;
+        await this.setAuthTokenAsync(data.token ? data.token : 'invalid');
+        return data.token;
     }
 
     static logout = async () => {
@@ -38,7 +25,7 @@ export default class AuthManager {
         await chrome.storage.local.remove('authToken');
 
         // Check if user is logged out
-        const [_, authToken] = await this.isAuthenticated();
-        console.log("User logged out. Auth:", authToken);
+        const authToken = await this.getAuthTokenFromStorage();
+        console.log("User logged out. Auth token value saved:", authToken);
     }
 }

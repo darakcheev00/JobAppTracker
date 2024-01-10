@@ -92,12 +92,12 @@ export default class EmailParser {
 					}
 				}
 			} else {
-				return { valid: false }
+				return { valid: false, snippet: full_message.snippet }
 			}
 
 			subject = headers.subject;
 			if (!subject) {
-				return { valid: false }
+				return { valid: false, snippet: full_message.snippet }
 			}
 
 			var parts = [payload];

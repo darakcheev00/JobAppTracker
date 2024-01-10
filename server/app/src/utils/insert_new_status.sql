@@ -5,7 +5,8 @@ CREATE OR REPLACE PROCEDURE insert_app_status(
     IN status_id INTEGER,
     IN date_val INTEGER,
     IN sender_val VARCHAR,
-    IN gmail_msg_id VARCHAR
+    IN gmail_msg_id VARCHAR,
+    IN snippet_val VARCHAR
 )
 LANGUAGE plpgsql
 AS $$
@@ -24,7 +25,7 @@ BEGIN
     INSERT INTO job (positionid, companyid) VALUES (pos_id, comp_id) ON CONFLICT (positionid, companyid) DO NOTHING;
 	SELECT jobid into job_id from job WHERE positionid = pos_id and companyid = comp_id;
 
-    INSERT INTO appstatus (userid, jobid, statusid, date, sender, gmailmsgid) VALUES (user_id, job_id, status_id, TO_TIMESTAMP(date_val), sender_val, gmail_msg_id);
+    INSERT INTO appstatus (userid, jobid, statusid, date, sender, gmailmsgid, snippet) VALUES (user_id, job_id, status_id, TO_TIMESTAMP(date_val), sender_val, gmail_msg_id, snippet_val);
 END;
 $$;
 

@@ -206,7 +206,7 @@ export default class StorageManager {
     await chrome.storage.local.set({ tableData: [] }, () => {
         console.log("Cleared table data.");
     });
-    const id = '18cdc66770ec0410';
+    const id = 'undef';
     await chrome.storage.local.set({ lastMsgId: id }, () => {
         console.log(`lastMsgId set in chrome storage value ${id}`);
     });
