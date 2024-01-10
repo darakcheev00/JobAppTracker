@@ -58,7 +58,7 @@ function App() {
 			setServerUp(serverRunning);
 			if (!serverRunning) {
 				console.log(`=== INIT DONE ===`);
-				return; 
+				return;
 			}
 
 			const jwt_token = await AuthManager.getJWTValue(token, tokenChanged);
@@ -73,7 +73,7 @@ function App() {
 
 		})();
 
-	}, []);	
+	}, []);
 
 	const loadDataFromServer = async (jwt_token: string) => {
 		console.log("Loading data from server...");
@@ -112,16 +112,16 @@ function App() {
 	const reconnect = async () => {
 		// Check if server is up
 		const serverRunning = await ServerManager.healthCheck();
-		if (!serverRunning){
+		if (!serverRunning) {
 			setServerUp(false);
 			return;
 		}
-		
+
 		// Get jwt from storage
 		var jwt_token = await StorageManager.getJwt();
-		
+
 		// Check if auth token has expired
-		if (!await GoogleApiManager.authTokenCheck(authToken)){
+		if (!await GoogleApiManager.authTokenCheck(authToken)) {
 			// Get new Token
 			const new_auth_token = await AuthManager.authenticate();
 			// Get new jwt from server
@@ -173,6 +173,13 @@ function App() {
 	return (
 		<div className="App">
 			<h1 className="title">Trackify</h1>
+			{!serverUp && (
+				<div>
+					<h3>❌ SERVER DOWN ❌</h3>
+					<button id="refresh_btn" onClick={() => reconnect()}>Reconnect 🔄</button>
+				</div>
+			)}
+
 			{authenticated ? (
 				<div>
 					{!showSettings && tableData && <button id="chart-button" onClick={async () => {
@@ -181,13 +188,6 @@ function App() {
 					}}>
 						{!showChart ? 'Show Chart' : 'Hide Chart'}
 					</button>}
-
-					{!serverUp && (
-						<div>
-							<h3>❌ SERVER DOWN ❌</h3>
-							<button id="refresh_btn" onClick={() => reconnect()}>Reconnect 🔄</button>
-						</div>
-					)}
 
 					<button id="settings-button" onClick={() => setShowSettings(!showSettings)}>
 						{!showSettings ? 'Settings' : 'Back'}
