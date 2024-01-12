@@ -5,3 +5,4 @@ The content of your email is not saved anywhere in the application, just used to
 "applied", "interview", "offer", "rejected", "ghosted". 
 
 ![Visualization of this repo](./diagram.svg)
+[Link to interactive visualizer](https://mango-dune-07a8b7110.1.azurestaticapps.net/?repo=darakcheev00%2FJobAppTracker)
