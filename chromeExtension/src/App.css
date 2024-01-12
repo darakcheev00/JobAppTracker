@@ -1,6 +1,7 @@
 #root {
   margin: 0;
   padding: 2rem;
+  padding-top: 0rem;
   text-align: center;
 }
 
@@ -18,6 +19,25 @@
     animation: App-logo-spin infinite 20s linear;
   }
 } */
+
+#server_status_banner {
+  background-color: orange;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Style for the reconnect button */
+#reconnect_button {
+  /* background-color: white; */
+  color: orange;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
 
 .App-header {
   background-color: #282c34;

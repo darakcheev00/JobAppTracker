@@ -10,7 +10,7 @@ import ServerManager from '../../utils/server_manager';
 
 import './MainPage.scss';
 import { serialize } from 'v8';
-import { isVariableDeclaration } from 'typescript';
+import { isVariableDeclaration, updateArrayBindingPattern } from 'typescript';
 import { Server } from 'http';
 
 type MainPageProps = {
@@ -83,6 +83,10 @@ export default function MainPage({
     }, []);
 
     useEffect(() => {
+        console.log("tableData after change: ", tableData?.length);
+        setDisplayedTableData(tableData);
+        console.log("displayedDataLen: ", displayedTableData?.length);
+
         if (tableData !== undefined) {
             console.log("tableData changed: ", tableData);
             setTableCounts({
@@ -97,7 +101,6 @@ export default function MainPage({
                 }).length,
             });
         }
-        setDisplayedTableData(tableData);
     }, [tableData]);
 
     const refresh = async () => {
@@ -193,8 +196,8 @@ export default function MainPage({
     }, [searchTerm]);
 
     const filterAll = () => { setDisplayedTableData(tableData); setDataFilter(0); };
-    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.AppRecieved)); setDataFilter(1); }
-    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Rejected)); setDataFilter(2); }
+    const filterApplied = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.AppRecieved)); setDataFilter(Status.AppRecieved); }
+    const filterRejected = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Rejected)); setDataFilter(Status.Rejected); }
     const filterInterviews = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Interview)) }
     const filterOffers = () => { setDisplayedTableData(tableData?.filter(item => item.gptRes.status === Status.Offer)) }
     const filterOther = () => {
@@ -211,9 +214,15 @@ export default function MainPage({
         if (!await ServerManager.healthCheck()){ 
             return;
         }
+        
+        const updatedTableData = tableData?.filter(item => item.id !== rowId);
+        console.log("tableData: ", tableData?.length);
+        console.log("updatedTableData: ",updatedTableData?.length);
+        
+        if (tableData && updatedTableData){
+            console.log(`Deleted ${tableData.length - updatedTableData.length} entries`);
+        }
 
-        const updatedTableData = displayedTableData?.filter(item => item.id !== rowId);
-        setDisplayedTableData(updatedTableData);
         setTableData(updatedTableData);
 
         if (updatedTableData) {
@@ -238,6 +247,7 @@ export default function MainPage({
         } catch (err: any) {
             console.error(`error deleting in db: ${err}`);
         }
+        console.log('----------------------------');
 
     };
 

@@ -56,12 +56,12 @@ function App() {
 
 			const serverRunning = await ServerManager.healthCheck();
 			setServerUp(serverRunning);
-			if (!serverRunning) {
+			if (!await serverRunning) {
 				console.log(`=== INIT DONE ===`);
 				return;
 			}
 
-			const jwt_token = await AuthManager.getJWTValue(token, tokenChanged);
+			const jwt_token = await AuthManager.getJWTValue(token, true);
 			setJwt(jwt_token);
 
 			setGptKeyValid(await ServerManager.gptKeyValidation(jwt_token));
@@ -172,13 +172,16 @@ function App() {
 
 	return (
 		<div className="App">
+			<div>
+				{!serverUp && (
+					<div id="server_status_banner">
+						<h3>Server is not running :/</h3>
+						<button id="reconnect_button" onClick={() => reconnect()}>Reconnect</button>
+					</div>
+				)}
+			</div>
+
 			<h1 className="title">Trackify</h1>
-			{!serverUp && (
-				<div>
-					<h3>❌ SERVER DOWN ❌</h3>
-					<button id="refresh_btn" onClick={() => reconnect()}>Reconnect 🔄</button>
-				</div>
-			)}
 
 			{authenticated ? (
 				<div>

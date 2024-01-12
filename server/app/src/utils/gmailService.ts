@@ -63,10 +63,9 @@ export default class GmailService {
 
         // TODO: if newestMsgDate is not set then get past 25
         if (newest_msg_date === undefined) {
-            newest_msg_date = 1703094681;
+            newest_msg_date = 1704328088;
         }
-        // newest_msg_date = 1703094681;
-
+        // newest_msg_date = 1704328088; // jan 4
 
         // date in seconds
         const gmailQuery = `in:inbox category:primary after:${newest_msg_date}`;
@@ -74,8 +73,8 @@ export default class GmailService {
         console.log(`query: ${gmailQuery}`);
 
         try {
-            const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${gmailQuery}`, {
-                // const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${gmailQuery}`, {
+            // const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${gmailQuery}`, {
+                const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${gmailQuery}`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${auth_token}`

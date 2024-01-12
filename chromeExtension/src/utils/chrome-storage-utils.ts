@@ -74,7 +74,7 @@ export default class StorageManager {
 
     static overrideTableData = async (newData: Message[]) => {
         await chrome.storage.local.set({ tableData: newData }, () => {
-            console.log(`Override table data complete. new:${newData.length}`);
+            console.log(`Override table data complete. new: ${newData.length}`);
         });
     }
 
