@@ -1,6 +1,8 @@
 import { query } from 'express';
 import pgPromise from 'pg-promise';
 import SharedDataManager from './sharedDataManager';
+import {Message} from './sharedDataManager';
+
 const fs = require('fs');
 const path = require('path');
 
@@ -362,11 +364,10 @@ export default class DatabaseService {
     async addNewStatuses(userId: any, messages: any) {
         // convert input to rows to insert
         const gptStatusMapping = SharedDataManager.getGptStatusMapping();
+        const new_valid_messages: Message[] = [];
 
         for (const msg of messages) {
-
             try {
-
                 // get or create position id
                 if (!msg.gptRes.hasOwnProperty('position')) {
                     throw new Error(`no position field`);
@@ -377,7 +378,13 @@ export default class DatabaseService {
                     throw new Error(`no company field`);
                 }
 
-                const result = await this.pool.query("CALL insert_app_status($1, $2, $3, $4, $5, $6, $7, $8)",
+                const queryString = "SELECT userid, gmailmsgid from appstatus where userid = $1 and gmailmsgid = $2";
+                const res = await this.pool.query(queryString,[userId,msg.id]);
+                if (res.rows.length > 0) {
+                    throw new Error(`msg already read before`);
+                }
+
+                await this.pool.query("CALL insert_app_status($1, $2, $3, $4, $5, $6, $7, $8)",
                     [
                         msg.gptRes.position,
                         msg.gptRes.company,
@@ -390,12 +397,14 @@ export default class DatabaseService {
                     ]
                 );
 
+                new_valid_messages.push(msg);
 
             } catch (err: any) {
                 console.error(`DB: Skipping saving message due to: ${err} on msg_id: ${msg.id}`);
                 continue;
             }
         }
+        return new_valid_messages;
     }
 }
 

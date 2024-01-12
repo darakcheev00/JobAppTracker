@@ -63,9 +63,9 @@ export default class GmailService {
 
         // TODO: if newestMsgDate is not set then get past 25
         if (newest_msg_date === undefined) {
-            newest_msg_date = 1704328088;
+            newest_msg_date = 1704809674; // jan 9
         }
-        // newest_msg_date = 1704328088; // jan 4
+        // newest_msg_date = 1704809674; // jan 9
 
         // date in seconds
         const gmailQuery = `in:inbox category:primary after:${newest_msg_date}`;
@@ -143,14 +143,16 @@ export default class GmailService {
                 await db.addNewInvalidEmails(userId, newInvalidSendersList);
                 console.log("Invalid emails saved in database");
             }
+            
+            var new_valid_messages: Message[] = valid_messages;
 
             // save status's in database
             if (valid_messages.length > 0) {
-                await db.addNewStatuses(userId, valid_messages);
+                new_valid_messages = await db.addNewStatuses(userId, valid_messages);
                 console.log("Status's saved in database");
             }
 
-            return valid_messages;
+            return new_valid_messages;
 
         } catch (err) {
             console.log(`Gmail service error: ${err}`);
