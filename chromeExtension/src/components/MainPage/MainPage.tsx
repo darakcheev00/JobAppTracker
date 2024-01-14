@@ -76,6 +76,7 @@ export default function MainPage({
 
     useEffect(() => {
         (async () => {
+            console.log("running initial table data load");
             const data = await StorageManager.getTableData() as Message[];
             setTableData(data);
             setDisplayedTableData(data);
@@ -83,12 +84,10 @@ export default function MainPage({
     }, []);
 
     useEffect(() => {
-        console.log("tableData after change: ", tableData?.length);
+        console.log("tableData changed. size: ", tableData?.length);
         setDisplayedTableData(tableData);
-        console.log("displayedDataLen: ", displayedTableData?.length);
-
         if (tableData !== undefined) {
-            console.log("tableData changed: ", tableData);
+            // console.log("tableData changed: ", tableData);
             setTableCounts({
                 appsReceived: tableData?.filter(item => item.gptRes.status === Status.AppRecieved).length,
                 rejected: tableData?.filter(item => item.gptRes.status === Status.Rejected).length,
@@ -102,6 +101,10 @@ export default function MainPage({
             });
         }
     }, [tableData]);
+
+    // useEffect(()=>{
+    //     console.log("displayedTableData changed. size: ", displayedTableData?.length);
+    // },[displayedTableData]);
 
     const refresh = async () => {
         console.log("Refreshing...");
@@ -216,14 +219,9 @@ export default function MainPage({
         }
         
         const updatedTableData = tableData?.filter(item => item.id !== rowId);
-        console.log("tableData: ", tableData?.length);
-        console.log("updatedTableData: ",updatedTableData?.length);
-        
-        if (tableData && updatedTableData){
-            console.log(`Deleted ${tableData.length - updatedTableData.length} entries`);
-        }
 
         setTableData(updatedTableData);
+        setDisplayedTableData(updatedTableData);
 
         if (updatedTableData) {
             await StorageManager.overrideTableData(updatedTableData);

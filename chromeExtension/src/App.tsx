@@ -200,7 +200,8 @@ function App() {
 						<Settings {...{
 							setAuthenticated,
 							setShowSettings,
-							setTableData
+							setTableData,
+							jwt
 						}} />
 					) : (
 						<MainPage {...{

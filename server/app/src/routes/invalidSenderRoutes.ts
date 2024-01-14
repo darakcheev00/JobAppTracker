@@ -1,14 +1,16 @@
 import express, { Request, Response } from 'express';
 import { db } from '../index';
+import { AuthedRequest, verifyToken } from '../utils/jwtService';
+import { log } from 'console';
 
 const router = express.Router();
 
 // Get all invalid sender emails
-router.get('/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
+router.get('/', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log('Hit GET /invalid-senders endpoint');
+    const userId = req.user_id;
     try {
         const senderList = await db.getInvalidSenders(userId);
-        if (senderList.size === 0) return res.status(200).json("0 saved emails.");
         res.json(senderList);
     } catch (error: any) {
         res.status(500).json(error.message);
@@ -16,32 +18,31 @@ router.get('/:userId', async (req: Request, res: Response) => {
 });
 
 // Add new invalid email
-router.post('/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-    const body = req.body;
+router.post('/', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log('Hit POST /invalid-senders endpoint');
+    const userId = req.user_id;
+    const {newEmail} = req.body;
     try {
-        // see if it is already saved
-        const senderExists = await db.senderExists(userId, body.email_address);
-        if (senderExists) return res.status(200).json("email address already saved");
+        if (newEmail === undefined){
+            throw new Error('newEmail is undefined');
+        }
+        const new_email_id = await db.addNewInvalidSender(userId, newEmail);
+        console.log(`returning ${new_email_id}`);
+        res.status(200).json(new_email_id);
 
-        const newRowInfo = await db.addNewInvalidSender(userId, body.email_address);
-        res.json(newRowInfo);
     } catch (error: any) {
         res.status(500).json(error.message);
     }
 });
 
 // Remove invalid email
-router.delete('/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-    const body = req.body;
+router.delete('/:id', verifyToken, async (req: AuthedRequest, res: Response) => {
+    console.log('Hit DELETE /invalid-senders/:id endpoint');
+    const userId = req.user_id;
+    const id = req.params.id;
     try {
-        // if address doesnt exist then no need to delete
-        const senderExists = await db.senderExists(userId, body.email_address);
-        if (!senderExists) return res.status(200).json("email address does not exist");
-
-        await db.deleteInvalidSender(userId, body.email_address);
-        res.json(`Deleted address: ${body.email_address}`);
+        const deletedAddress = await db.deleteInvalidSender(userId, id);
+        res.status(200).json(`Deleted address: ${deletedAddress}`);
     } catch (error: any) {
         res.status(500).json(error.message);
     }

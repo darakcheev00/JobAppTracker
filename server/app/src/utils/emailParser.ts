@@ -87,7 +87,7 @@ export default class EmailParser {
 				if (invalid_senders.size > 0) {
 					const invalidSnippetsArray = Array.from(invalid_senders);
 					if (invalidSnippetsArray.some(invalidSnippet => invalidSnippet !== "" && sender.includes(invalidSnippet))) {
-						// console.log(`Dropped message from ${messageObj.sender} by snippet [${invalidSnippet}]`);
+						console.log(`Dropped message from invalid ${sender}`);
 						return { valid: false };
 					}
 				}

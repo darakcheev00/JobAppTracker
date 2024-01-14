@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS UserAccount
 );
 
 CREATE TABLE IF NOT EXISTS InvalidSender
-(
+(   
+    emailid         SERIAL          PRIMARY KEY,
     UserId          INT             NOT NULL    REFERENCES UserAccount (UserId)     ON DELETE CASCADE,
-    EmailAddress    VARCHAR(255)    NOT NULL,
-    PRIMARY KEY (UserId, EmailAddress)
+    EmailAddress    VARCHAR(255)    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Company 

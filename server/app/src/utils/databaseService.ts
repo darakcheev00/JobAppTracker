@@ -2,6 +2,7 @@ import { query } from 'express';
 import pgPromise from 'pg-promise';
 import SharedDataManager from './sharedDataManager';
 import {Message} from './sharedDataManager';
+import { error } from 'console';
 
 const fs = require('fs');
 const path = require('path');
@@ -218,14 +219,14 @@ export default class DatabaseService {
     // Invalid Sender
     // ====================================================================================================
 
-    async getInvalidSenders(userId: any): Promise<Set<string>> {
+    async getInvalidSenders(userId: any) {
         try {
-            const result = await this.pool.query("SELECT EmailAddress FROM InvalidSender WHERE UserId = $1", [userId]);
-            const senders: Set<string> = new Set();
-            for (const row of result.rows) {
-                senders.add(row.EmailAddress);
-            }
-            return senders;
+            const result = await this.pool.query("SELECT emailid as id, emailaddress as email FROM InvalidSender WHERE userid = $1", [userId]);
+            // const senders: Set<string> = new Set();
+            // for (const row of result.rows) {
+            //     senders.add(row.emailaddress);
+            // }
+            return result.rows;
         } catch (err) {
             console.error('[server]: Error getting invalid senders. SQL query error: ', err);
             throw new Error('Internal server error');
@@ -262,19 +263,24 @@ export default class DatabaseService {
 
     async addNewInvalidSender(userId: any, email_address: string) {
         try {
-            const result = await this.pool.query("INSERT INTO InvalidSender (UserId, EmailAddress) VALUES ($1, $2) RETURNING *", [userId, email_address]);
-            return result.rows.length !== 0;
+            const res = await this.pool.query("INSERT INTO InvalidSender (UserId, EmailAddress) VALUES ($1, $2) on conflict (userid, emailaddress) do nothing returning emailid", [userId, email_address]);
+            if (res.rows.length > 0){
+                return res.rows[0].emailid;
+            } else {
+                throw new Error(`sender already exists: ${email_address}`);
+            }
         } catch (err) {
-            console.error('[server]: Error getting user details. SQL query error: ', err);
+            console.error('[server]: Error adding invalid sender. SQL query error: ', err);
             throw new Error('Internal server error');
         }
     }
 
-    async deleteInvalidSender(userId: any, email_address: string) {
+    async deleteInvalidSender(userId: any, id: string) {
         try {
-            await this.pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND EmailAddress = $2", [userId, email_address]);
+            const res = await this.pool.query("DELETE FROM InvalidSender WHERE UserId = $1 AND emailid = $2 returning emailaddress", [userId, id]);
+            return res.rows[0].emailaddress;
         } catch (err) {
-            console.error('[server]: Error getting user details. SQL query error: ', err);
+            console.error('[server]: Error deleting invalid sender. SQL query error: ', err);
             throw new Error('Internal server sql error');
         }
     }

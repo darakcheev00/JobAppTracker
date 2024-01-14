@@ -55,8 +55,6 @@ export default class GmailService {
 
     static processInbox = async (userId: string) => {
 
-        // Get data from db
-        const invalidSenderSet: Set<string> = await db.getInvalidSenders(userId);
         // TODO check if invalidSenderList type is valid make sure its a set
         var { gpt_key, auth_token, newest_msg_date } = await db.get_GPTKey_Token_Date(userId);
         console.log(`== date retrieved: ${timeConverter(newest_msg_date)}`);
@@ -96,6 +94,9 @@ export default class GmailService {
             // Note: each message is just a {id, threadId} object to be further extracted
 
             await GmailService.saveLatestMsgDate(auth_token, data.messages[0].id, userId);
+
+            // Get data from db
+            const invalidSenderSet: Set<string> = await db.getInvalidSenders(userId);
 
             // get details and parse emails
             const messagePromises = data.messages.map(async (msg: any) => {

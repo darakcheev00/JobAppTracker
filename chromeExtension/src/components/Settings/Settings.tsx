@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import AuthManager from '../../utils/auth';
 import StorageManager, { Message } from '../../utils/chrome-storage-utils';
+import InvalidEmailArea from './InvalidSenderArea';
 
 type InvalidEmailsSubmitForm = {
     invalidList: string;
@@ -11,17 +12,16 @@ type Props = {
     setAuthenticated: (key: boolean) => void;
     setShowSettings: (key: boolean) => void;
     setTableData: (key: Message[] | undefined) => void;
+    jwt: string | undefined;
 };
 
 export default function Settings({
     setAuthenticated,
     setShowSettings,
     setTableData,
+    jwt
 }: Props) {
 
-    // const [textareaValue, setTextareaValue] = useState(Array.from(invalidEmails).join('\n')); // Initialize with existing emails
-
-    const { register, handleSubmit, reset } = useForm<InvalidEmailsSubmitForm>();
     const [userEmail, setUserEmail] = useState('');
 
     // useEffect(()=>{
@@ -40,29 +40,6 @@ export default function Settings({
     //     setDateNewestMsg(newLatestDate);
     // }
 
-    // const handleSubmitInvalids = async () => {
-    //     console.log(`Submitted string: ${textareaValue}`);
-    //     const inputString = textareaValue.replace(/'/g, '').replace(/"/g, '');
-
-    //     const stringList = inputString.split('\n').map(email => email.trim());
-    //     const stringSet = new Set(stringList);
-
-    //     // setInvalidEmails(stringSet);
-    //     setTextareaValue(Array.from(stringSet).join('\n'));
-
-    //     await StorageManager.setInvalidEmails(stringSet);
-    // }
-
-    // const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    //     setTextareaValue(event.target.value);
-    // };
-
-    // const handleClearEmails = async () => {
-    //     await StorageManager.clearInvalidEmails();
-    //     // setInvalidEmails(new Set<string>());
-    //     setTextareaValue("");
-    // }
-
     return (
         <div className='settings-card'>
             <h3>{`Retrieving emails from: ${userEmail}`}</h3>
@@ -72,21 +49,7 @@ export default function Settings({
                 {/* <button onClick={reloadToday}>Clear</button> */}
             </div>
 
-            {/* <form onSubmit={handleSubmit(handleSubmitInvalids)}>
-                <h4>Enter the snippets of email addresses that are unrelated to job applications. Emails containing these snippets will be automatically skipped. This saves your OpenAI api cash!</h4>
-                <textarea
-                    id="invalidEmailsBox"
-                    placeholder='Enter invalid snippets (one per line)'
-                    rows={10}
-                    cols={50}
-                    value={textareaValue}
-                    onChange={handleTextareaChange}
-                />
-                <div>
-                    <button type="submit">Submit</button>
-                    <button onClick={handleClearEmails}>Clear email list</button>
-                </div>
-            </form> */}
+            <InvalidEmailArea {...{jwt}}/>
 
             <button id="logout_btn" onClick={handleLogoutClick}>
                 Log out
